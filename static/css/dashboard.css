@@ -1,0 +1,107 @@
+/* ============================================================
+   MediMitra – Dashboard-Specific Styles (Dark Obsidian Theme)
+   ============================================================ */
+
+/* Section headings inside dashboard */
+.section-title {
+    font-size: 1.05rem;
+    font-weight: 750;
+    color: #f1f5f9;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: -0.015em;
+}
+
+.section-title svg {
+    width: 20px !important;
+    height: 20px !important;
+    color: #2dd4bf;
+    flex-shrink: 0;
+}
+
+/* Adherence summary bar */
+.adherence-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(14, 28, 48, 0.9);
+    border: 1px solid rgba(45, 212, 191, 0.15);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    margin-top: 8px;
+}
+
+.adherence-bar-fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    background: linear-gradient(90deg, #14b8a6, #38bdf8);
+    box-shadow: 0 0 10px rgba(45, 212, 191, 0.4);
+    transition: width 1s ease;
+}
+
+/* Activity timeline */
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.activity-item {
+    display: flex;
+    gap: 14px;
+    padding: 14px 20px;
+    border-bottom: 1px solid rgba(45, 212, 191, 0.1);
+    align-items: flex-start;
+    transition: background 0.2s ease;
+}
+
+.activity-item:hover {
+    background: rgba(45, 212, 191, 0.04);
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #2dd4bf;
+    box-shadow: 0 0 8px rgba(45, 212, 191, 0.6);
+    margin-top: 5px;
+    flex-shrink: 0;
+}
+
+.activity-dot.dot-success {
+    background: #10b981;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+}
+
+.activity-dot.dot-warning {
+    background: #f59e0b;
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+}
+
+.activity-dot.dot-danger {
+    background: #ef4444;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+}
+
+.activity-content {
+    flex: 1;
+}
+
+.activity-text {
+    font-size: 0.88rem;
+    color: #e2e8f0;
+    font-weight: 500;
+    line-height: 1.45;
+}
+
+.activity-time {
+    font-size: 0.76rem;
+    color: #94a3b8;
+    margin-top: 2px;
+}

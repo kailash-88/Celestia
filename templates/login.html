@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Login – MediMitra{% endblock %}
+
+{% block content_auth %}
+<div class="login-shell">
+    <section class="login-story">
+        <a href="{{ url_for('auth.landing') }}" class="login-brand"><span class="login-brand-icon"><i data-lucide="heart-pulse"></i></span><span>MediMitra</span></a>
+        <div class="login-story-copy">
+            <span class="login-eyebrow"><i data-lucide="sparkles"></i> YOUR HEALTH, BETTER ORGANISED</span>
+            <h1>Welcome back.<br><em>Pick up where you left off.</em></h1>
+            <p>Your medicines, schedules and prescription reviews are together in one clear place.</p>
+            <div class="login-benefits">
+                <div><span><i data-lucide="pill"></i></span><p><strong>Medicine cabinet</strong><small>Keep medicine details easy to find.</small></p></div>
+                <div><span><i data-lucide="calendar-check"></i></span><p><strong>Daily schedule</strong><small>See your upcoming doses at a glance.</small></p></div>
+                <div><span><i data-lucide="shield-check"></i></span><p><strong>Human-reviewed care</strong><small>Doctor review stays part of the process.</small></p></div>
+            </div>
+        </div>
+        <p class="login-disclaimer">MediMitra helps organise health information. It does not replace professional medical advice.</p>
+    </section>
+
+    <section class="login-panel" aria-labelledby="loginTitle">
+        <div class="login-panel-heading">
+            <span class="login-panel-icon"><i data-lucide="lock-keyhole"></i></span>
+            <div><span class="login-eyebrow">SECURE ACCOUNT</span><h2 id="loginTitle">Sign in</h2></div>
+        </div>
+        <p class="login-panel-copy">Enter your account details to continue.</p>
+        <form method="POST" action="{{ url_for('auth.login') }}" class="auth-form" id="loginForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <div class="input-wrapper">
+                    <i data-lucide="user"></i>
+                    <input type="text" id="username" name="username" placeholder="Enter your username" required
+                        autocomplete="username" autofocus>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="input-wrapper">
+                    <i data-lucide="lock"></i>
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required
+                        autocomplete="current-password">
+                    <button type="button" class="toggle-password" aria-label="Show password"
+                        onclick="togglePassword('password', this)">
+                        <i data-lucide="eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full">
+                <i data-lucide="log-in"></i>
+                <span>Sign In</span>
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Don't have an account? <a href="{{ url_for('auth.register') }}">Create one</a></p>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function togglePassword(inputId, btn) {
+        const input = document.getElementById(inputId);
+        if (input.type === 'password') {
+            input.type = 'text';
+            btn.innerHTML = '<i data-lucide="eye-off"></i>';
+        } else {
+            input.type = 'password';
+            btn.innerHTML = '<i data-lucide="eye"></i>';
+        }
+        lucide.createIcons();
+    }
+</script>
+{% endblock %}

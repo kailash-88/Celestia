@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Pharmacy Portal · MediMitra{% endblock %}
+{% block page_title %}Pharmacy workspace{% endblock %}
+{% block content %}
+<div class="welcome-banner"><h2>{{ profile.pharmacy_name }}</h2><p>Pharmacist account workspace</p></div>
+{% if profile.verification_status != 'verified' %}
+<section class="card doctor-pending"><div class="scan-ai-orb"><i data-lucide="shield-check"></i></div><h2>Pharmacy verification pending</h2><p>Inventory and refill services will be available after an administrator verifies this pharmacy’s registration.</p><p>Registration: {{ profile.license_number }} · Status: {{ profile.verification_status|title }}</p></section>
+{% else %}
+<section class="card"><div class="card-header"><h2>Pharmacy registration verified</h2><span class="tag tag-success">Verified</span></div><p>Pharmacy verification is complete. Inventory, availability, and refill workflows have not been enabled in this version yet.</p></section>
+{% endif %}
+{% endblock %}

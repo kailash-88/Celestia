@@ -1,0 +1,910 @@
+/* ============================================================
+   MediMitra – Responsive Breakpoints & Mobile Optimization
+   Complete protection against horizontal scrolling & status bar overlap
+   ============================================================ */
+
+/* Global Safe Area & Viewport Constraints */
+:root {
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+html, body {
+    max-width: 100vw !important;
+    width: 100% !important;
+    overflow-x: hidden !important;
+    position: relative;
+    box-sizing: border-box;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+.main-content, .page-content, .dashboard-page, .auth-layout, .container {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+}
+
+/* ============================================================
+   Tablet Breakpoint (< 1024px)
+   ============================================================ */
+@media (max-width: 1024px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    .sidebar-close {
+        display: block;
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+
+    .menu-toggle {
+        display: flex;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .stats-grid, .dashboard-page .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+/* ============================================================
+   Mobile Breakpoint (< 768px)
+   ============================================================ */
+@media (max-width: 768px) {
+    /* 1. Mobile Status Bar Safe Area Insets (leaves room for battery %, time, data) */
+    .topbar {
+        padding-top: max(env(safe-area-inset-top, 0px), 18px) !important;
+        padding-bottom: 12px !important;
+        padding-left: 14px !important;
+        padding-right: 14px !important;
+        height: auto !important;
+        min-height: calc(56px + max(env(safe-area-inset-top, 0px), 18px)) !important;
+    }
+
+    /* 2. Scaled Mobile Typography & Padding (no giant fonts, no horizontal scrolling) */
+    html {
+        font-size: 15px !important;
+    }
+
+    body {
+        font-size: 0.94rem !important;
+        line-height: 1.5 !important;
+    }
+
+    .page-content {
+        padding: 14px 12px 88px 12px !important; /* Extra bottom pad for mobile navigation */
+    }
+
+    /* Headings */
+    h1, .topbar-title h1 {
+        font-size: clamp(1.15rem, 4.2vw, 1.35rem) !important;
+    }
+
+    h2, .welcome-banner h2 {
+        font-size: clamp(1.08rem, 3.8vw, 1.28rem) !important;
+        line-height: 1.3 !important;
+    }
+
+    h3, .card-header h3 {
+        font-size: clamp(0.95rem, 3.2vw, 1.1rem) !important;
+    }
+
+    /* Welcome Banner & Actions */
+    .welcome-banner {
+        padding: 18px 16px !important;
+        border-radius: 16px !important;
+        gap: 12px !important;
+    }
+
+    .welcome-actions {
+        width: 100% !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+
+    .welcome-actions .btn {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+
+    /* Buttons scaled to mobile without overflowing */
+    .btn {
+        min-height: 42px !important;
+        padding: 9px 14px !important;
+        font-size: 0.88rem !important;
+    }
+
+    .btn-sm {
+        min-height: 36px !important;
+        padding: 6px 12px !important;
+        font-size: 0.82rem !important;
+    }
+
+    .btn-lg {
+        min-height: 46px !important;
+        padding: 10px 18px !important;
+        font-size: 0.95rem !important;
+    }
+
+    /* Cards */
+    .card, .stat-card {
+        border-radius: 14px !important;
+    }
+
+    .card-header {
+        padding: 12px 14px !important;
+    }
+
+    .card-body {
+        padding: 14px !important;
+    }
+
+    /* Stats Grid */
+    .stats-grid, .dashboard-page .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+        margin-bottom: 20px !important;
+    }
+
+    .stat-card, .dashboard-page .stat-card {
+        padding: 12px 10px !important;
+        min-height: auto !important;
+        gap: 10px !important;
+    }
+
+    .stat-value, .dashboard-page .stat-value {
+        font-size: 1.35rem !important;
+    }
+
+    .stat-label, .dashboard-page .stat-label {
+        font-size: 0.76rem !important;
+    }
+
+    .stat-icon, .dashboard-page .stat-icon {
+        width: 38px !important;
+        height: 38px !important;
+        flex: 0 0 38px !important;
+    }
+
+    /* Form Controls */
+    .form-group input, .form-group select, .form-group textarea,
+    .form-input, .form-select,
+    .form-grid input, .form-grid select, .form-grid textarea {
+        min-height: 44px !important;
+        padding: 8px 12px !important;
+        font-size: 0.9rem !important;
+    }
+
+    .form-row, .form-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    .quick-actions, .dashboard-page .quick-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+        margin-bottom: 20px !important;
+    }
+
+    .quick-action-btn, .dashboard-page .quick-action-btn {
+        min-height: 52px !important;
+        padding: 10px !important;
+        font-size: 0.82rem !important;
+    }
+
+    /* Tables */
+    table {
+        display: block !important;
+        max-width: 100% !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    td, th {
+        padding: 8px 10px !important;
+        font-size: 0.84rem !important;
+        white-space: nowrap;
+    }
+
+    .auth-card {
+        padding: 24px 18px !important;
+    }
+
+    .auth-header h1 {
+        font-size: 1.45rem !important;
+    }
+}
+
+/* ============================================================
+   Small Mobile Breakpoint (< 420px)
+   ============================================================ */
+@media (max-width: 420px) {
+    html {
+        font-size: 14.5px !important;
+    }
+
+    .page-content {
+        padding: 10px 8px 88px 8px !important;
+    }
+
+    .stats-grid, .dashboard-page .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+    }
+
+    .stat-card {
+        padding: 10px 8px !important;
+    }
+
+    .stat-value {
+        font-size: 1.22rem !important;
+    }
+}
+
+/* ============================================================
+   Frosted Glass Mobile Bottom Navigation
+   ============================================================ */
+.mobile-bottom-nav {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .mobile-bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        height: 64px;
+        background: rgba(8, 22, 38, 0.94);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(45, 212, 191, 0.22);
+        box-shadow: 0 -4px 25px rgba(0, 0, 0, 0.4);
+        align-items: center;
+        justify-content: space-around;
+        padding: 0 4px;
+        padding-bottom: max(env(safe-area-inset-bottom, 0px), 4px);
+    }
+
+    .bottom-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+        height: 100%;
+        text-decoration: none;
+        color: #8da4be;
+        font-size: 0.68rem;
+        font-weight: 600;
+        gap: 3px;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+
+    .bottom-nav-item svg {
+        width: 20px;
+        height: 20px;
+        transition: transform 0.2s ease, color 0.2s ease;
+    }
+
+    .bottom-nav-item.active {
+        color: #2dd4bf;
+    }
+
+    .bottom-nav-item.active svg {
+        color: #2dd4bf;
+        transform: translateY(-2px);
+    }
+
+    .bottom-nav-item.active::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        width: 32px;
+        height: 3px;
+        border-radius: 0 0 3px 3px;
+        background: #2dd4bf;
+        box-shadow: 0 0 10px #2dd4bf;
+    }
+
+    .bottom-nav-scan-circle {
+        display: grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #2dd4bf 0%, #0d9488 100%);
+        color: #ffffff;
+        box-shadow: 0 4px 14px rgba(45, 212, 191, 0.45);
+        margin-top: -18px;
+        border: 2px solid #081626;
+        transition: transform 0.2s ease;
+    }
+
+    .bottom-nav-item:active .bottom-nav-scan-circle {
+        transform: scale(0.92);
+    }
+}
+
+/* ============================================================
+   3D Cinematic Startup Splash Screen
+   ============================================================ */
+.splash-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    background: radial-gradient(circle at 50% 40%, #0f2d42 0%, #061320 60%, #030a12 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    perspective: 1200px;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.splash-overlay.fade-out {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Ambient glow & particles */
+.splash-backdrop-glow {
+    position: absolute;
+    width: 480px;
+    height: 480px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(45, 212, 191, 0.28) 0%, rgba(14, 165, 233, 0.12) 45%, transparent 70%);
+    filter: blur(40px);
+    animation: splashPulseGlow 3s ease-in-out infinite alternate;
+    pointer-events: none;
+}
+
+@keyframes splashPulseGlow {
+    0% { transform: scale(0.85); opacity: 0.6; }
+    100% { transform: scale(1.15); opacity: 1; }
+}
+
+.splash-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    transform-style: preserve-3d;
+}
+
+/* 3D Rotating Logo Shield */
+.splash-3d-scene {
+    width: 140px;
+    height: 140px;
+    perspective: 1000px;
+    margin-bottom: 24px;
+}
+
+.splash-3d-cube {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    animation: splash3DEntrance 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards, splash3DFloat 3.6s ease-in-out 1.4s infinite alternate;
+}
+
+@keyframes splash3DEntrance {
+    0% {
+        transform: rotateY(-240deg) rotateX(45deg) scale3d(0.3, 0.3, 0.3) translateY(50px);
+        opacity: 0;
+    }
+    60% {
+        transform: rotateY(18deg) rotateX(-12deg) scale3d(1.08, 1.08, 1.08) translateY(-8px);
+        opacity: 1;
+    }
+    85% {
+        transform: rotateY(-8deg) rotateX(6deg) scale3d(0.97, 0.97, 0.97) translateY(2px);
+    }
+    100% {
+        transform: rotateY(0deg) rotateX(0deg) scale3d(1, 1, 1) translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes splash3DFloat {
+    0% {
+        transform: rotateY(-6deg) rotateX(4deg) translateY(0);
+    }
+    50% {
+        transform: rotateY(8deg) rotateX(-6deg) translateY(-10px);
+    }
+    100% {
+        transform: rotateY(-6deg) rotateX(4deg) translateY(0);
+    }
+}
+
+.cube-front {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    transform-style: preserve-3d;
+    filter: drop-shadow(0 15px 35px rgba(20, 184, 166, 0.45));
+}
+
+.shield-aura {
+    position: absolute;
+    inset: -12px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(94, 234, 212, 0.4) 0%, transparent 70%);
+    filter: blur(12px);
+    pointer-events: none;
+}
+
+.splash-pulse-svg {
+    width: 110px;
+    height: 110px;
+    transform: translateZ(25px);
+}
+
+.splash-ecg-path {
+    stroke-dasharray: 120;
+    stroke-dashoffset: 120;
+    animation: splashECGDraw 1.2s ease-in-out 0.4s forwards;
+}
+
+@keyframes splashECGDraw {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+/* 3D Typography */
+.splash-brand-wrap {
+    text-align: center;
+    margin-bottom: 24px;
+    transform-style: preserve-3d;
+    animation: splashTextFade 1s cubic-bezier(0.16, 1, 0.3, 1) 0.3s backwards;
+}
+
+@keyframes splashTextFade {
+    0% {
+        opacity: 0;
+        transform: translateY(20px) translateZ(-30px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) translateZ(0);
+    }
+}
+
+.splash-app-title {
+    font-size: clamp(2.2rem, 6vw, 3rem);
+    font-weight: 850;
+    letter-spacing: -0.04em;
+    color: #ffffff;
+    margin: 0;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 30px rgba(45, 212, 191, 0.4);
+}
+
+.splash-title-highlight {
+    background: linear-gradient(135deg, #5eead4 0%, #2dd4bf 50%, #38bdf8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 16px rgba(45, 212, 191, 0.6));
+}
+
+.splash-app-tagline {
+    margin: 6px 0 0 0;
+    font-size: clamp(0.72rem, 2vw, 0.82rem);
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    color: #94a3b8;
+    text-transform: uppercase;
+}
+
+/* Progress track */
+.splash-loader-track {
+    width: 180px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 9999px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.splash-loader-bar {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #14b8a6, #2dd4bf, #38bdf8);
+    border-radius: 9999px;
+    box-shadow: 0 0 12px #2dd4bf;
+    animation: splashFillBar 1.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s forwards;
+}
+
+@keyframes splashFillBar {
+    0% { width: 0%; }
+    60% { width: 75%; }
+    100% { width: 100%; }
+}
+
+.splash-audio-badge {
+    margin-top: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #64748b;
+    letter-spacing: 0.04em;
+    opacity: 0.85;
+}
+
+.splash-audio-badge svg {
+    width: 13px;
+    height: 13px;
+    color: #2dd4bf;
+}
+
+/* ============================================================
+   ABSOLUTE ZERO-WHITE POLICY & DARK OBSIDIAN HEALTHCARE AESTHETICS
+   "pls dont use white background anywhere"
+   ============================================================ */
+:root {
+    --bg-body: #060e1a !important;
+    --bg-card: rgba(13, 26, 45, 0.88) !important;
+    --bg-sidebar: rgba(8, 18, 32, 0.98) !important;
+    --bg-surface: #0a1727 !important;
+    --gray-50: #060f1c !important;
+    --gray-100: #0a1727 !important;
+    --gray-200: #122438 !important;
+    --gray-300: #1c324c !important;
+    --gray-400: #64748b !important;
+    --gray-500: #94a3b8 !important;
+    --gray-600: #cbd5e1 !important;
+    --gray-700: #e2e8f0 !important;
+    --gray-800: #f1f5f9 !important;
+    --gray-900: #ffffff !important;
+    --border-glow: rgba(45, 212, 191, 0.18) !important;
+}
+
+body, html {
+    background: radial-gradient(ellipse at 85% 0%, #12374e 0%, transparent 40%),
+                radial-gradient(ellipse at 15% 100%, #0a2538 0%, transparent 45%),
+                linear-gradient(135deg, #050d18 0%, #071322 50%, #050e19 100%) !important;
+    color: #cbd5e1 !important;
+}
+
+/* Enforce dark obsidian surfaces across all cards and containers */
+.card, .stat-card, .dashboard-grid > div, .panel,
+.adherence-circle, .upload-card, .result-card, .chat-container {
+    background: rgba(13, 26, 45, 0.88) !important;
+    border: 1px solid rgba(45, 212, 191, 0.18) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35) !important;
+    color: #cbd5e1 !important;
+}
+
+.card-header {
+    background: rgba(15, 31, 54, 0.6) !important;
+    border-bottom: 1px solid rgba(45, 212, 191, 0.14) !important;
+    color: #f1f5f9 !important;
+}
+
+/* Enforce dark inputs, selects, and textareas */
+input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+select, textarea, .form-input, .form-select, .form-control {
+    background: rgba(6, 17, 30, 0.88) !important;
+    border: 1px solid rgba(56, 189, 248, 0.28) !important;
+    color: #f1f5f9 !important;
+    border-radius: 9px !important;
+}
+
+input:focus, select:focus, textarea:focus {
+    background: rgba(8, 22, 38, 0.95) !important;
+    border-color: #2dd4bf !important;
+    box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.2) !important;
+    color: #ffffff !important;
+    outline: none !important;
+}
+
+input::placeholder, textarea::placeholder {
+    color: #64748b !important;
+}
+
+/* Table dark surfaces */
+table {
+    background: transparent !important;
+    color: #cbd5e1 !important;
+}
+
+th {
+    background: rgba(16, 35, 60, 0.75) !important;
+    color: #f1f5f9 !important;
+    border-bottom: 1px solid rgba(45, 212, 191, 0.2) !important;
+}
+
+td {
+    border-color: rgba(45, 212, 191, 0.1) !important;
+    color: #cbd5e1 !important;
+}
+
+tr:hover td {
+    background: rgba(45, 212, 191, 0.05) !important;
+}
+
+/* Badges & tags in dark luxury mode */
+.tag, .badge-role {
+    background: rgba(45, 212, 191, 0.14) !important;
+    border: 1px solid rgba(45, 212, 191, 0.3) !important;
+    color: #2dd4bf !important;
+}
+
+/* ============================================================
+   GLOBAL UNIFIED ICON SYSTEM (Normalized Lucide & SVG icons)
+   "some icons are big some are small" -> strictly standardized
+   ============================================================ */
+svg.lucide, .lucide, i[data-lucide] {
+    width: 20px !important;
+    height: 20px !important;
+    stroke-width: 2px !important;
+    vertical-align: middle !important;
+    flex-shrink: 0 !important;
+    display: inline-block !important;
+}
+
+/* Small contextual icons */
+.btn-sm svg, .btn-sm .lucide,
+.icon-sm, .tag svg, .badge svg,
+.medicine-meta svg, .dose-details svg,
+.disclaimer svg {
+    width: 15px !important;
+    height: 15px !important;
+    stroke-width: 2px !important;
+}
+
+/* Button default icons */
+.btn svg, .btn .lucide, .quick-action-btn svg {
+    width: 18px !important;
+    height: 18px !important;
+    stroke-width: 2px !important;
+}
+
+/* Stat card icons in glowing rounded badge */
+.stat-icon {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    border-radius: 12px !important;
+    display: grid !important;
+    place-items: center !important;
+}
+
+.stat-icon svg, .stat-icon .lucide {
+    width: 22px !important;
+    height: 22px !important;
+    stroke-width: 2.2px !important;
+}
+
+/* Navigation icons */
+.nav-link svg, .bottom-nav-item svg {
+    width: 20px !important;
+    height: 20px !important;
+    stroke-width: 2px !important;
+}
+
+/* Section heading icons */
+.card-header h3 svg, .section-title svg, h2 svg, h3 svg {
+    width: 20px !important;
+    height: 20px !important;
+    margin-right: 4px !important;
+}
+
+/* Icon button headers */
+.icon-btn svg {
+    width: 19px !important;
+    height: 19px !important;
+}
+
+/* Hero / Display Icons */
+.welcome-mark svg {
+    width: 32px !important;
+    height: 32px !important;
+}
+
+/* ============================================================
+   PROPER TYPOGRAPHIC HIERARCHY
+   "the fonts are not proper" -> balanced, clean Inter type scale
+   ============================================================ */
+body, button, input, select, textarea {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+    text-rendering: optimizeLegibility !important;
+}
+
+h1, .topbar-title h1 {
+    font-size: clamp(1.2rem, 3.5vw, 1.45rem) !important;
+    font-weight: 750 !important;
+    letter-spacing: -0.025em !important;
+    color: #f8fafc !important;
+    line-height: 1.25 !important;
+}
+
+h2, .welcome-banner h2 {
+    font-size: clamp(1.1rem, 3vw, 1.3rem) !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.02em !important;
+    color: #f1f5f9 !important;
+    line-height: 1.3 !important;
+}
+
+h3, .card-header h3 {
+    font-size: clamp(0.98rem, 2.5vw, 1.1rem) !important;
+    font-weight: 650 !important;
+    letter-spacing: -0.015em !important;
+    color: #e2e8f0 !important;
+    line-height: 1.35 !important;
+}
+
+h4 {
+    font-size: 0.95rem !important;
+    font-weight: 650 !important;
+    color: #e2e8f0 !important;
+}
+
+p, .text-base {
+    font-size: 0.92rem !important;
+    line-height: 1.6 !important;
+    color: #cbd5e1 !important;
+}
+
+.stat-value {
+    font-size: 1.65rem !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.03em !important;
+    color: #f8fafc !important;
+}
+
+.stat-label {
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    color: #94a3b8 !important;
+}
+
+small, .text-xs, .stat-sub, .medicine-meta, .dose-details {
+    font-size: 0.8rem !important;
+    color: #94a3b8 !important;
+}
+
+/* ============================================================
+   GSAP 3D PERSPECTIVE & HARDWARE ACCELERATION CANVAS
+   "have some 3d transitions gsap"
+   ============================================================ */
+.dashboard-page, .main-content, .page-content, .auth-layout {
+    perspective: 1200px;
+    transform-style: preserve-3d;
+}
+
+.card, .stat-card, .welcome-banner, .quick-action-btn, .medicine-item {
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    will-change: transform;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.card:hover, .stat-card:hover {
+    border-color: rgba(45, 212, 191, 0.45) !important;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), 0 0 25px rgba(45, 212, 191, 0.12) !important;
+}
+
+/* ============================================================
+   ZERO EXCESS GAPS & TIGHT HIGH-TECH SPACING
+   "why there is excess gaps" -> fixed across banner, cards & doses
+   ============================================================ */
+.welcome-banner, .dashboard-page .welcome-banner {
+    min-height: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
+    padding: 20px 22px !important;
+    margin-bottom: 18px !important;
+    border-radius: 18px !important;
+}
+
+@media (min-width: 900px) {
+    .welcome-banner, .dashboard-page .welcome-banner {
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        padding: 24px 28px !important;
+    }
+}
+
+/* Remove min-height bloating and excess gaps on dose / medicine items */
+.medicine-item, .dashboard-page .medicine-item,
+.dose-item, .dashboard-page .dose-item {
+    min-height: auto !important;
+    padding: 12px 14px !important;
+    margin-bottom: 8px !important;
+    gap: 10px !important;
+}
+
+/* Stat card icons in glowing translucent luxury mode (no white boxes) */
+.stat-icon-teal {
+    background: rgba(20, 184, 166, 0.18) !important;
+    color: #2dd4bf !important;
+    border: 1px solid rgba(45, 212, 191, 0.35) !important;
+    box-shadow: 0 0 14px rgba(45, 212, 191, 0.15) !important;
+}
+
+.stat-icon-blue {
+    background: rgba(56, 189, 248, 0.18) !important;
+    color: #38bdf8 !important;
+    border: 1px solid rgba(56, 189, 248, 0.35) !important;
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.15) !important;
+}
+
+.stat-icon-green {
+    background: rgba(34, 197, 94, 0.18) !important;
+    color: #4ade80 !important;
+    border: 1px solid rgba(34, 197, 94, 0.35) !important;
+    box-shadow: 0 0 14px rgba(34, 197, 94, 0.15) !important;
+}
+
+.stat-icon-orange {
+    background: rgba(245, 158, 11, 0.18) !important;
+    color: #fbbf24 !important;
+    border: 1px solid rgba(245, 158, 11, 0.35) !important;
+    box-shadow: 0 0 14px rgba(245, 158, 11, 0.15) !important;
+}
+
+.stat-icon-red {
+    background: rgba(239, 68, 68, 0.18) !important;
+    color: #f87171 !important;
+    border: 1px solid rgba(239, 68, 68, 0.35) !important;
+    box-shadow: 0 0 14px rgba(239, 68, 68, 0.15) !important;
+}
+
+/* Print */
+@media print {
+    .sidebar,
+    .topbar,
+    .mobile-bottom-nav,
+    .splash-overlay,
+    .quick-actions,
+    .disclaimer {
+        display: none !important;
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+
+    .card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+}

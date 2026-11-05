@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% block title %}Review Prescription – Doctor Portal{% endblock %}
+{% block page_title %}Prescription Review &amp; Approval ⭐{% endblock %}
+
+{% block styles %}
+<style>
+.review-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 24px;
+    align-items: start;
+}
+@media (max-width: 900px) {
+    .review-layout { grid-template-columns: 1fr; }
+}
+.image-preview-panel {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    position: sticky;
+    top: 20px;
+}
+.image-preview-panel img {
+    width: 100%;
+    max-height: 520px;
+    object-fit: contain;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+}
+.ai-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f0fdf4;
+    color: #166534;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+.action-box {
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    padding: 18px 20px;
+    margin-top: 20px;
+    border-radius: 0 0 12px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="max-width: 1200px; margin: 0 auto;">
+
+    <!-- Top Back Link -->
+    <div style="margin-bottom: 16px;">
+        <a href="{{ url_for('doctor.index') }}" style="color:#059669; font-weight:600; display:inline-flex; align-items:center; gap:6px; text-decoration:none;">
+            <i data-lucide="arrow-left" style="width:16px;height:16px;"></i>
+            <span>Back to Clinical Queue</span>
+        </a>
+    </div>
+
+    <!-- Banner -->
+    <div class="welcome-banner" style="background:#065f46; color:white; border-radius:12px; padding:20px; margin-bottom:24px;">
+        <h2 style="margin:0 0 4px 0; color:white;">Prescription Clinical Review for {{ prescription.patient_name }}</h2>
+        <p style="margin:0; opacity:0.9; font-size:0.9rem;">
+            Carefully verify the patient-uploaded prescription image against the AI-extracted details below. You can approve, correct, reject, or request a clearer image.
+        </p>
+    </div>
+
+    <div class="review-layout">
+        
+        <!-- Left: Uploaded Prescription Image -->
+        <div class="image-preview-panel">
+            <h3 style="margin:0 0 12px 0; display:flex; align-items:center; gap:8px; font-size:1.05rem;">
+                <i data-lucide="image" style="color:#059669;"></i>
+                <span>Uploaded Prescription Document</span>
+            </h3>
+
+            {% if prescription.image_path and prescription.image_path != 'digital_prescription' %}
+            <img src="{{ url_for('doctor.prescription_image', prescription_id=prescription.id) }}" alt="Prescription Document">
+            {% else %}
+            <div style="height:260px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; color:#64748b; border-radius:8px;">
+                <span>Digital prescription record</span>
+            </div>
+            {% endif %}
+
+            <div style="margin-top:14px; font-size:0.85rem; color:#64748b; background:#f8fafc; padding:10px; border-radius:6px;">
+                <div><strong>Patient:</strong> {{ prescription.patient_name }}</div>
+                <div><strong>Submission Date:</strong> {{ prescription.patient_confirmed_at or prescription.scan_date }}</div>
+                <div><strong>Document ID:</strong> #{{ prescription.id }}</div>
+            </div>
+        </div>
+
+        <!-- Right: AI Extraction & Doctor Clinical Approval Form -->
+        <div class="card" style="padding:0; overflow:hidden;">
+            <div style="padding:20px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <h3 style="margin:0;">Clinical Details &amp; Regimen</h3>
+                    <span style="font-size:0.8rem; color:#64748b;">Review, edit, or append instructions before approval</span>
+                </div>
+                <span class="ai-badge">
+                    <i data-lucide="sparkles" style="width:14px;height:14px;"></i>
+                    <span>AI Extracted</span>
+                </span>
+            </div>
+
+            <form method="POST" style="padding:20px;">
+                
+                <!-- Medicines List from Extraction -->
+                <div style="margin-bottom:20px;">
+                    <label style="font-weight:700; font-size:0.9rem; color:#0f172a; display:block; margin-bottom:8px;">
+                        Prescribed Medicines &amp; Dosing Instructions:
+                    </label>
+
+                    {% if fields.medicines %}
+                        {% for med in fields.medicines %}
+                        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px; margin-bottom:12px;">
+                            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px; margin-bottom:8px;">
+                                <div>
+                                    <label style="font-size:0.75rem; color:#64748b; font-weight:700;">Medicine Name:</label>
+                                    <input type="text" name="medicine_name" value="{{ med.name }}" required style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-weight:600;">
+                                </div>
+                                <div>
+                                    <label style="font-size:0.75rem; color:#64748b; font-weight:700;">Dosage / Strength:</label>
+                                    <input type="text" name="dosage" value="{{ med.dosage or 'Standard' }}" style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px;">
+                                </div>
+                            </div>
+                            <div style="display:grid; grid-template-columns: 1fr 2fr; gap:10px;">
+                                <div>
+                                    <label style="font-size:0.75rem; color:#64748b; font-weight:700;">Frequency:</label>
+                                    <input type="text" name="frequency" value="{{ med.frequency or 'Once daily' }}" style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px;">
+                                </div>
+                                <div>
+                                    <label style="font-size:0.75rem; color:#64748b; font-weight:700;">Food / Meal Instructions:</label>
+                                    <input type="text" name="instructions" value="{{ med.instructions or 'After food' }}" style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px;">
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <!-- Single medicine extraction fallback -->
+                        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px; margin-bottom:12px;">
+                            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px; margin-bottom:8px;">
+                                <div>
+                                    <label style="font-size:0.75rem; color:#64748b; font-weight:700;">Medicine Name:</label>
+                                    <input type="text" name="medicine_name" value="{{ fields.name or 'Prescribed Medicine' }}" required style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-weight:600;">
+                                </div>
+                                <div>
+                                    <label style="font-size:0.75rem; color:#64748b; font-weight:700;">Dosage / Strength:</label>
+                                    <input type="text" name="dosage" value="{{ fields.dosage or 'Standard' }}" style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px;">
+                                </div>
+                            </div>
+                            <div style="display:grid; grid-template-columns: 1fr 2fr; gap:10px;">
+                                <div>
+                                    <label style="font-size:0.75rem; color:#64748b; font-weight:700;">Frequency:</label>
+                                    <input type="text" name="frequency" value="{{ fields.frequency or 'Daily' }}" style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px;">
+                                </div>
+                                <div>
+                                    <label style="font-size:0.75rem; color:#64748b; font-weight:700;">Food / Meal Instructions:</label>
+                                    <input type="text" name="instructions" value="{{ fields.prescription_instructions or 'Take after meal' }}" style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px;">
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Doctor Clinical Comments / Revision Notes -->
+                <div style="margin-bottom:16px;">
+                    <label style="font-weight:700; font-size:0.9rem; color:#0f172a; display:block; margin-bottom:6px;">
+                        Doctor Clinical Notes / Comments:
+                    </label>
+                    <textarea name="comments" rows="3" placeholder="Enter clinical advice or reasons if modifying or rejecting..." style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit; font-size:0.9rem;"></textarea>
+                </div>
+
+                <!-- Action Buttons: Approve, Reject, Request Clearer -->
+                <div class="action-box">
+                    <div style="display:flex; gap:8px;">
+                        <button type="submit" name="action" value="request_clearer" class="btn btn-outline btn-sm" style="color:#d97706; border-color:#d97706;">
+                            <i data-lucide="image-plus" style="width:14px;height:14px;display:inline;"></i>
+                            <span>Request Clearer Image</span>
+                        </button>
+                        <button type="submit" name="action" value="reject" class="btn btn-outline btn-sm" style="color:#dc2626; border-color:#dc2626;" onclick="return confirm('Reject this prescription?');">
+                            <i data-lucide="x-circle" style="width:14px;height:14px;display:inline;"></i>
+                            <span>Reject</span>
+                        </button>
+                    </div>
+
+                    <button type="submit" name="action" value="approve" class="btn btn-primary" style="background:#059669; border:none; padding:10px 20px; font-weight:700; display:inline-flex; align-items:center; gap:8px;">
+                        <i data-lucide="check-circle-2"></i>
+                        <span>Approve &amp; Add to Schedule</span>
+                    </button>
+                </div>
+
+            </form>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

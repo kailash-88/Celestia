@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Account Settings – MediMitra{% endblock %}
+{% block page_title %}Account Settings{% endblock %}
+
+{% block content %}
+<div style="max-width: 780px; margin: 0 auto; display:flex; flex-direction:column; gap: 24px;">
+
+    <!-- Profile Details Card -->
+    <div class="card">
+        <div class="card-header">
+            <h3><i data-lucide="user" style="width:18px;height:18px;margin-right:6px;color:var(--primary-600)"></i> Profile Details</h3>
+        </div>
+        <div class="card-body">
+            <form method="post" action="{{ url_for('auth.settings') }}">
+                <input type="hidden" name="action" value="profile">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" class="form-input" value="{{ user.username }}" disabled style="background: var(--gray-100); cursor: not-allowed;">
+                        <small class="text-muted">Username cannot be changed.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" class="form-input" value="{{ user.email }}" disabled style="background: var(--gray-100); cursor: not-allowed;">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="full_name">Full Name *</label>
+                        <input type="text" id="full_name" name="full_name" class="form-input" required value="{{ user.full_name }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" class="form-input" placeholder="+1 (555) 000-0000" value="{{ user.phone or '' }}">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Account Role</label>
+                    <div>
+                        <span class="tag tag-info" style="font-size:0.85rem; padding:4px 12px; text-transform:capitalize;">
+                            {{ user.role }} Account
+                        </span>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; margin-top: 16px;">
+                    <button type="submit" class="btn btn-primary">
+                        <i data-lucide="save"></i>
+                        <span>Save Profile</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Password Change Card -->
+    <div class="card">
+        <div class="card-header">
+            <h3><i data-lucide="lock" style="width:18px;height:18px;margin-right:6px;color:var(--primary-600)"></i> Change Password</h3>
+        </div>
+        <div class="card-body">
+            <form method="post" action="{{ url_for('auth.settings') }}">
+                <input type="hidden" name="action" value="password">
+                <div class="form-group">
+                    <label for="old_password">Current Password *</label>
+                    <input type="password" id="old_password" name="old_password" class="form-input" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="new_password">New Password *</label>
+                        <input type="password" id="new_password" name="new_password" class="form-input" required minlength="6">
+                        <small class="text-muted">Minimum 6 characters.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm_password">Confirm New Password *</label>
+                        <input type="password" id="confirm_password" name="confirm_password" class="form-input" required minlength="6">
+                    </div>
+                </div>
+                <div style="display:flex; justify-content:flex-end; margin-top: 16px;">
+                    <button type="submit" class="btn btn-secondary">
+                        <i data-lucide="key"></i>
+                        <span>Update Password</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

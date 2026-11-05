@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% block title %}Scanner – MediMitra{% endblock %}
+{% block page_title %}Medicine Scanner{% endblock %}
+
+{% block content %}
+<div class="card scanner-card">
+    {% if not prescription %}
+    <div class="card-header">
+        <h3><i data-lucide="scan-line"></i> Scan a medicine or prescription</h3>
+    </div>
+    <p class="text-muted">OpenCV preprocesses the image for local Tesseract OCR. Add a vision API key to also request AI suggestions from the image. If Tesseract is missing, local text extraction cannot run. Results are suggestions only; no treatment advice is generated.</p>
+    <form method="post" enctype="multipart/form-data" class="auth-form" id="scanForm">
+        <div style="display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin:16px 0;">
+            <div style="position:relative; overflow:hidden; display:inline-block; cursor:pointer;">
+                <button type="button" class="btn btn-primary" style="pointer-events:none; display:inline-flex; align-items:center; gap:8px;">
+                    <i data-lucide="camera"></i>
+                    <span>Take Photo (Camera)</span>
+                </button>
+                <input id="image" name="image" type="file" accept="image/*" capture="environment" required style="position:absolute; left:0; top:0; width:100%; height:100%; opacity:0; cursor:pointer; z-index:5;">
+            </div>
+
+            <div style="position:relative; overflow:hidden; display:inline-block; cursor:pointer;">
+                <button type="button" class="btn btn-outline" style="pointer-events:none; display:inline-flex; align-items:center; gap:8px;">
+                    <i data-lucide="file-up"></i>
+                    <span>Upload from Files / Gallery</span>
+                </button>
+                <input id="galleryImage" type="file" accept="image/*,.pdf" style="position:absolute; left:0; top:0; width:100%; height:100%; opacity:0; cursor:pointer; z-index:5;" onchange="if(this.files[0]){ try{ const dt=new DataTransfer(); dt.items.add(this.files[0]); document.getElementById('image').files=dt.files; }catch(e){} document.getElementById('image').dispatchEvent(new Event('change')); }">
+            </div>
+        </div>
+
+        <div id="previewWrap" style="display:none;" class="card" style="padding:12px; margin-top:10px;">
+            <img id="previewImg" alt="Selected image preview" style="max-width:100%; max-height:360px; object-fit:contain; border-radius:8px; display:block; margin:0 auto;">
+            <div style="display:flex; justify-content:center; gap:10px; margin-top:10px;">
+                <button type="button" id="removeImg" class="btn btn-secondary btn-sm">Remove image</button>
+                <button class="btn btn-primary btn-sm" type="submit" id="scanBtn"><i data-lucide="scan"></i> Scan &amp; Extract</button>
+            </div>
+        </div>
+    </form>
+    {% else %}
+    <div class="card-header">
+        <h3><i data-lucide="clipboard-check"></i> Review extracted details</h3>
+    </div>
+    <div class="flash flash-warning" role="alert">
+        <i data-lucide="triangle-alert"></i>
+        <span>AI and OCR suggestions are estimates. Check the original image carefully; only save details you can verify. Do not use extracted instructions as doctor approval.</span>
+    </div>
+    <div class="scan-analysis-grid">
+        <figure class="scan-original">
+            <img src="{{ url_for('scanner.prescription_image', prescription_id=prescription.id) }}" alt="Uploaded medicine or prescription image">
+            <figcaption>Original upload · OCR confidence: {% if fields.ocr_confidence is not none %}{{ fields.ocr_confidence }}%{% else %}unavailable{% endif %} · Use this to verify every suggestion</figcaption>
+        </figure>
+        <section class="scan-ai-panel" aria-label="AI image analysis">
+            <div class="scan-ai-heading"><span class="scan-ai-orb"><i data-lucide="sparkles"></i></span><div><strong>{{ 'AI image analysis' if fields.analysis_source == 'vision_ai' else 'Image suggestions' }}</strong><small>{{ fields.document_type|replace('_',' ')|title if fields.document_type else 'Document type unclear' }}</small></div></div>
+            <p>{{ fields.analysis_notice or 'Review the suggested details against the original image.' }}</p>
+            {% if fields.prescription_summary %}<div class="scan-summary"><span>What this prescription appears to say</span><p>{{ fields.prescription_summary }}</p></div>{% endif %}
+            {% if fields.uncertain_fields %}<div class="scan-uncertain"><i data-lucide="circle-help"></i> Check these carefully: {{ fields.uncertain_fields|join(', ')|replace('_',' ') }}</div>{% endif %}
+            {% if fields.voice_scripts %}
+            <div style="margin-top: 12px; padding: 10px 14px; background: rgba(7, 18, 32, 0.9); border-radius: 10px; border: 1.5px solid rgba(56, 189, 248, 0.3); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="volume-2" style="color: #38bdf8; width: 18px; height: 18px;"></i>
+                    <strong style="font-size: 0.85rem; color: #f1f5f9;">Listen Aloud (आवाज़ में सुनें):</strong>
+                    <select id="rxVoiceLang" onchange="speakRx(this.value)" style="padding: 5px 8px; border-radius: 6px; border: 1.5px solid rgba(56, 189, 248, 0.4); font-size: 0.85rem; font-weight: 600; background:rgba(8, 20, 36, 0.95); color:#f1f5f9; cursor:pointer;">
+                        <option value="en">🇬🇧 English</option>
+                        <option value="hi" selected>🇮🇳 हिन्दी</option>
+                        <option value="ta">🇮🇳 தமிழ்</option>
+                        <option value="te">🇮🇳 తెలుగు</option>
+                        <option value="bn">🇮🇳 বাংলা</option>
+                        <option value="mr">🇮🇳 मराठी</option>
+                        <option value="gu">🇮🇳 ગુજરાતી</option>
+                        <option value="kn">🇮🇳 ಕನ್ನಡ</option>
+                        <option value="ml">🇮🇳 മലയാളം</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 6px;">
+                    <button type="button" class="btn btn-primary btn-sm" onclick="speakRx(document.getElementById('rxVoiceLang').value)" style="padding: 5px 12px; font-size: 0.82rem; display: flex; align-items: center; gap: 4px; background:#0284c7; font-weight:700;">
+                        <i data-lucide="play" style="width: 14px; height: 14px;"></i> Speak Aloud
+                    </button>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="window.speechSynthesis && window.speechSynthesis.cancel()" style="padding: 5px 10px; font-size: 0.82rem; border-color:#ef4444; color:#ef4444;">
+                        Stop
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+        </section>
+    </div>
+    <form method="post" class="scan-reanalyze-form">
+        <input type="hidden" name="reanalyze" value="yes">
+        <button class="btn btn-outline" type="submit"><i data-lucide="refresh-cw"></i> Re-run OCR and AI analysis</button>
+        <small class="text-muted">Use this after installing Tesseract or changing your vision API settings.</small>
+    </form>
+    {% if fields.unavailable %}
+    <div class="flash flash-info" role="status"><i data-lucide="info"></i><span>{{ fields.unavailable }}</span></div>
+    {% endif %}
+    <details>
+        <summary>Raw OCR text (may contain errors)</summary>
+        <pre>{{ prescription.raw_ocr_text or 'No OCR text available.' }}</pre>
+    </details>
+    {% if fields.medicines and fields.medicines|length > 0 %}
+    <div style="margin: 16px 0; padding: 14px 18px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;">
+        <h4 style="margin:0 0 8px 0; color: #166534; display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="list-checks" style="width: 18px; height: 18px;"></i>
+            <span>{{ fields.medicines|length }} Prescribed Medicine(s) Extracted:</span>
+        </h4>
+        <ul style="margin: 0; padding-left: 20px; color: #1e293b; font-size: 0.95rem;">
+            {% for med in fields.medicines %}
+            <li style="margin-bottom: 4px;">
+                <strong>{{ med.name }}</strong> ({{ med.dosage or 'Standard dose' }}, {{ med.form or 'Tablet' }}) – <em>{{ med.frequency or '1 OD' }}</em> {% if med.duration %}for {{ med.duration }}{% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    <form method="post" class="auth-form">
+        <div class="form-row">
+            <div class="form-group"><label for="name">Suggested medicine name * <small class="confidence-label">Confidence: {{ fields.confidence.name|default('unavailable')|title }}</small></label><input id="name" name="name" value="{{ fields.name or '' }}" required></div>
+            <div class="form-group"><label for="generic_name">Generic name</label><input id="generic_name" name="generic_name" value="{{ fields.generic_name or '' }}"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label for="active_ingredient">Active ingredient</label><input id="active_ingredient" name="active_ingredient" value="{{ fields.active_ingredient or '' }}"></div>
+            <div class="form-group"><label for="dosage">Strength (from image)</label><input id="dosage" name="dosage" value="{{ fields.dosage or '' }}"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label for="manufacturer">Manufacturer / brand</label><input id="manufacturer" name="manufacturer" value="{{ fields.manufacturer or '' }}"></div>
+            <div class="form-group"><label for="batch_number">Batch / lot number</label><input id="batch_number" name="batch_number" value="{{ fields.batch_number or '' }}"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label for="manufacturing_date">Manufacturing date</label><input id="manufacturing_date" name="manufacturing_date" type="date" value="{{ fields.manufacturing_date or '' }}"></div>
+            <div class="form-group"><label for="expiry_date">Expiry date</label><input id="expiry_date" name="expiry_date" type="date" value="{{ fields.expiry_date or '' }}"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label for="form">Formulation</label><input id="form" name="form" value="{{ fields.form or '' }}" placeholder="tablet, capsule, syrup..."></div>
+            <div class="form-group"><label for="prescription_date">Prescription date</label><input id="prescription_date" name="prescription_date" type="date" value="{{ fields.prescription_date or '' }}"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label for="doctor_name">Prescriber name</label><input id="doctor_name" name="doctor_name" value="{{ fields.doctor_name or '' }}"></div>
+            <div class="form-group"><label for="specialty">Specialty (if shown)</label><input id="specialty" name="specialty" value="{{ fields.specialty or '' }}"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label for="patient_name">Patient name (if shown)</label><input id="patient_name" name="patient_name" value="{{ fields.patient_name or '' }}"></div>
+            <div class="form-group"><label for="purpose">Purpose (only if stated)</label><input id="purpose" name="purpose" value="{{ fields.purpose or '' }}"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label for="frequency">Frequency (visible text only)</label><input id="frequency" name="frequency" value="{{ fields.frequency or '' }}"></div>
+            <div class="form-group"><label for="route">Route</label><input id="route" name="route" value="{{ fields.route or '' }}"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label for="duration">Duration (visible text only)</label><input id="duration" name="duration" value="{{ fields.duration or '' }}"></div>
+            <div class="form-group"><label for="prescription_instructions">Other visible prescription instructions</label><textarea id="prescription_instructions" name="prescription_instructions" rows="3">{{ fields.prescription_instructions or '' }}</textarea></div>
+        </div>
+        <label><input type="checkbox" name="confirm_details" value="yes" required> I reviewed these details against the medicine packaging or prescription.</label>
+        <button class="btn btn-primary" type="submit"><i data-lucide="send"></i> Confirm and send for doctor review</button>
+    </form>
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/scanner.js') }}"></script>
+{% if fields and fields.voice_scripts_json %}
+<script>
+const rxVoiceScripts = {{ fields.voice_scripts_json|safe }};
+let currentRxAudio = null;
+
+function stopRxVoice() {
+    if (currentRxAudio) {
+        try { currentRxAudio.pause(); currentRxAudio.currentTime = 0; } catch(e) {}
+        currentRxAudio = null;
+    }
+    if (window.AndroidTTS && typeof window.AndroidTTS.stop === 'function') {
+        try { window.AndroidTTS.stop(); } catch(e) {}
+    }
+    if ('speechSynthesis' in window) {
+        try { window.speechSynthesis.cancel(); } catch(e) {}
+    }
+}
+
+function speakRx(lang) {
+    stopRxVoice();
+    const item = rxVoiceScripts[lang] || rxVoiceScripts['en'];
+    if (!item || !item.text) return;
+
+    // 1. Guaranteed Universal HTML5 Audio stream
+    try {
+        const audio = new Audio('/scanner/audio?lang=' + encodeURIComponent(lang) + '&text=' + encodeURIComponent(item.text));
+        currentRxAudio = audio;
+        audio.play().catch(err => {
+            fallbackLocalRxTTS(item, lang);
+        });
+    } catch(e) {
+        fallbackLocalRxTTS(item, lang);
+    }
+}
+
+function fallbackLocalRxTTS(item, lang) {
+    if (window.AndroidTTS && typeof window.AndroidTTS.speak === 'function') {
+        try {
+            window.AndroidTTS.speak(item.text, lang, 0.95);
+            return;
+        } catch(e) {}
+    }
+    if ('speechSynthesis' in window) {
+        try {
+            const utt = new SpeechSynthesisUtterance(item.text);
+            utt.lang = item.locale || 'hi-IN';
+            utt.rate = 0.95;
+            window.speechSynthesis.speak(utt);
+        } catch(e) {}
+    }
+}
+</script>
+{% endif %}
+{% endblock %}

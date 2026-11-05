@@ -1,0 +1,42 @@
+(() => {
+  const canvas = document.getElementById('medicineScene');
+  if (!canvas || !window.THREE) return;
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
+  camera.position.set(0, 0, 7.4);
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setClearColor(0x000000, 0);
+  scene.add(new THREE.AmbientLight(0x91d8e2, 1.65));
+  const key = new THREE.PointLight(0x7affdf, 2.7, 16); key.position.set(2.5, 3, 4); scene.add(key);
+  const rim = new THREE.PointLight(0x548fff, 2.2, 14); rim.position.set(-3, -1, 2); scene.add(rim);
+  const capsule = new THREE.Group();
+  const topMat = new THREE.MeshPhysicalMaterial({ color: 0x46d8c0, metalness: .32, roughness: .2, clearcoat: 1, clearcoatRoughness: .14 });
+  const bottomMat = new THREE.MeshPhysicalMaterial({ color: 0x173d72, metalness: .5, roughness: .22, clearcoat: 1, clearcoatRoughness: .12 });
+  const shell = new THREE.Group();
+  const cylinder = new THREE.Mesh(new THREE.CylinderGeometry(.72, .72, 1.55, 64, 1, false), topMat); shell.add(cylinder);
+  const upper = new THREE.Mesh(new THREE.SphereGeometry(.72, 64, 40, 0, Math.PI * 2, 0, Math.PI / 2), topMat); upper.position.y = .775; shell.add(upper);
+  const lower = new THREE.Mesh(new THREE.SphereGeometry(.72, 64, 40, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), bottomMat); lower.position.y = -.775; shell.add(lower);
+  const seam = new THREE.Mesh(new THREE.TorusGeometry(.72, .025, 12, 80), new THREE.MeshStandardMaterial({ color: 0xbaf8ef, metalness: .5, roughness: .24 })); seam.rotation.x = Math.PI / 2; shell.add(seam);
+  shell.rotation.z = Math.PI / 2.25;
+  capsule.add(shell);
+  const inner = new THREE.Mesh(new THREE.SphereGeometry(.31, 32, 24), new THREE.MeshPhysicalMaterial({ color: 0xf5ffff, metalness: .08, roughness: .2, transmission: .12, clearcoat: 1 }));
+  inner.position.set(.08, 0, .04); capsule.add(inner);
+  const halo = new THREE.Mesh(new THREE.TorusGeometry(1.25, .012, 8, 100), new THREE.MeshBasicMaterial({ color: 0x59dccc, transparent: true, opacity: .42 })); halo.rotation.x = 1.1; halo.rotation.y = .3; capsule.add(halo);
+  scene.add(capsule);
+  const particles = new THREE.Group();
+  for (let i = 0; i < 70; i++) {
+    const dot = new THREE.Mesh(new THREE.SphereGeometry(.014 + Math.random() * .022, 8, 8), new THREE.MeshBasicMaterial({ color: i % 4 ? 0x62cfc6 : 0x8abaff, transparent: true, opacity: .3 + Math.random() * .55 }));
+    const a = Math.random() * Math.PI * 2, r = 1.75 + Math.random() * 1.45;
+    dot.position.set(Math.cos(a) * r, (Math.random() - .5) * 3.2, Math.sin(a) * r * .45);
+    particles.add(dot);
+  }
+  scene.add(particles);
+  let pointerX = 0, pointerY = 0, frame = 0;
+  const resize = () => { const rect = canvas.getBoundingClientRect(); if (!rect.width || !rect.height) return; renderer.setSize(rect.width, rect.height, false); camera.aspect = rect.width / rect.height; camera.updateProjectionMatrix(); };
+  const observer = new ResizeObserver(resize); observer.observe(canvas); resize();
+  window.addEventListener('pointermove', event => { pointerX = (event.clientX / window.innerWidth - .5) * .28; pointerY = (event.clientY / window.innerHeight - .5) * .2; }, { passive: true });
+  const draw = () => { frame += .008; if (!reduced) { capsule.rotation.y = Math.sin(frame * .7) * .12 + pointerX; capsule.rotation.x = Math.cos(frame * .5) * .08 + pointerY; capsule.position.y = Math.sin(frame) * .09; halo.rotation.z += .0018; particles.rotation.y += .0007; } renderer.render(scene, camera); if (!reduced) requestAnimationFrame(draw); };
+  draw();
+})();

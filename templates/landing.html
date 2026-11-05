@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}MediMitra · Care that keeps you in control{% endblock %}
+{% block head_extra %}<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">{% endblock %}
+{% block content_auth %}
+<div class="landing-page">
+  <nav class="landing-nav" aria-label="Main navigation">
+    <a href="{{ url_for('auth.landing') }}" class="landing-brand"><span class="brand-mark"><i data-lucide="heart-pulse"></i></span>MediMitra</a>
+    <div class="landing-nav-links"><a href="#how-it-works">How it works</a><a href="#safety">Safety first</a><a class="landing-signin" href="{{ url_for('auth.login') }}">Sign in <i data-lucide="arrow-up-right"></i></a></div>
+  </nav>
+  <section class="landing-hero">
+    <div class="hero-copy">
+      <span class="hero-kicker"><i data-lucide="sparkles"></i> A clearer way to manage medicines</span>
+      <h1>Understand your medicines.<br><em>Feel more in control.</em></h1>
+      <p>Keep your medicine list, schedules and prescription details together. MediMitra helps organise the information so you can review it with your healthcare team.</p>
+      <div class="hero-ctas"><a class="hero-primary" href="{{ url_for('auth.register') }}">Get started <i data-lucide="arrow-right"></i></a><a class="hero-secondary" href="{{ url_for('auth.login') }}">I already have an account</a></div>
+      <div class="hero-proof"><span><i data-lucide="shield-check"></i> Your details stay in your account</span><span><i data-lucide="user-round-check"></i> Professional review comes first</span></div>
+    </div>
+    <div class="hero-scene" aria-label="Three-dimensional medicine capsule illustration">
+      <div class="scene-glow"></div><canvas id="medicineScene" aria-hidden="true"></canvas>
+      <div class="scene-label label-one"><span class="label-dot"></span> Medicine details <b>Organised</b></div>
+      <div class="scene-label label-two"><span class="label-dot mint"></span> Prescription review <b>Human-led</b></div>
+      <div class="scene-orbit orbit-one"></div><div class="scene-orbit orbit-two"></div>
+    </div>
+    <div class="hero-footnote">MediMitra provides organisational and educational support, not diagnosis or treatment.</div>
+  </section>
+  <section class="landing-features" id="how-it-works">
+    <div class="feature-intro"><span class="section-eyebrow">BUILT AROUND YOUR ROUTINE</span><h2>One calmer place for the details.</h2></div>
+    <article class="feature-card"><span class="feature-icon"><i data-lucide="scan-line"></i></span><h3>Scan and review</h3><p>Extract visible medicine details and check suggestions against the original label.</p></article>
+    <article class="feature-card"><span class="feature-icon"><i data-lucide="calendar-clock"></i></span><h3>Stay organised</h3><p>Keep your medicine cabinet and dose schedule easy to find and update.</p></article>
+    <article class="feature-card" id="safety"><span class="feature-icon"><i data-lucide="shield-check"></i></span><h3>Review safety signals</h3><p>See potential issues clearly, with unknown information labelled as unknown.</p></article>
+  </section>
+  <footer class="landing-footer"><span>© MediMitra</span><span>AI can help organise information; only a qualified healthcare professional can make clinical decisions.</span></footer>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/landing.js') }}"></script>{% endblock %}

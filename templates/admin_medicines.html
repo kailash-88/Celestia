@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Master Medicine Database – Admin Console{% endblock %}
+{% block page_title %}Master Medicine Database Management{% endblock %}
+
+{% block content %}
+<div style="max-width: 1100px; margin: 0 auto;">
+
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom: 24px;">
+        <div>
+            <h2>Verified Medicine Knowledgebase Management 💊</h2>
+            <p style="color:#64748b;">Curate official drug definitions, standard dosage strengths, meal instructions, verified side effects, and interaction safety rules.</p>
+        </div>
+        <button onclick="document.getElementById('addMedForm').style.display = document.getElementById('addMedForm').style.display === 'none' ? 'block' : 'none';" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px;">
+            <i data-lucide="plus-circle"></i>
+            <span>Add New Medicine</span>
+        </button>
+    </div>
+
+    <!-- Collapsible Add Medicine Form -->
+    <div class="card" id="addMedForm" style="display:none; padding:24px; margin-bottom:24px; border-left:4px solid #4f46e5;">
+        <h3 style="margin:0 0 16px 0;">Add Master Medicine Entry</h3>
+        <form method="POST">
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:14px; margin-bottom:12px;">
+                <div>
+                    <label style="font-size:0.8rem; font-weight:700;">Brand / Trade Name *:</label>
+                    <input type="text" name="name" required placeholder="e.g. Paracetamol or Dolo 650" style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px;">
+                </div>
+                <div>
+                    <label style="font-size:0.8rem; font-weight:700;">Generic / Active Ingredient:</label>
+                    <input type="text" name="generic_name" placeholder="e.g. Acetaminophen" style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px;">
+                </div>
+                <div>
+                    <label style="font-size:0.8rem; font-weight:700;">Therapeutic Category:</label>
+                    <input type="text" name="category" placeholder="e.g. Analgesic / Antipyretic" style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px;">
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 2fr; gap:14px; margin-bottom:12px;">
+                <div>
+                    <label style="font-size:0.8rem; font-weight:700;">Standard Strengths:</label>
+                    <input type="text" name="standard_strength" placeholder="e.g. 500mg, 650mg" style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px;">
+                </div>
+                <div>
+                    <label style="font-size:0.8rem; font-weight:700;">Before / After Food Instructions:</label>
+                    <input type="text" name="before_after_food" placeholder="e.g. Take strictly after food with water" style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px;">
+                </div>
+            </div>
+
+            <div style="margin-bottom:12px;">
+                <label style="font-size:0.8rem; font-weight:700;">Clinical Purpose &amp; Uses:</label>
+                <input type="text" name="common_uses" placeholder="e.g. Relieves mild to moderate pain and fever." style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px;">
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-bottom:12px;">
+                <div>
+                    <label style="font-size:0.8rem; font-weight:700;">Known Side Effects:</label>
+                    <textarea name="side_effects" rows="2" placeholder="e.g. Rare at normal doses; nausea, allergic skin rash." style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit;"></textarea>
+                </div>
+                <div>
+                    <label style="font-size:0.8rem; font-weight:700;">Safety Warnings:</label>
+                    <textarea name="warnings" rows="2" placeholder="e.g. Do not exceed 4g/day. Caution in liver disease." style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit;"></textarea>
+                </div>
+            </div>
+
+            <div style="margin-bottom:16px;">
+                <label style="font-size:0.8rem; font-weight:700;">Known Dangerous Drug Interactions (comma-separated):</label>
+                <input type="text" name="known_interactions" placeholder="e.g. Warfarin, Isoniazid, Alcohol" style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px;">
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="background:#4f46e5; border:none;">Save Master Medicine Entry</button>
+        </form>
+    </div>
+
+    <!-- Search Master DB -->
+    <div class="card" style="padding:16px; margin-bottom:20px;">
+        <form method="GET" style="display:flex; gap:12px;">
+            <input type="text" name="q" value="{{ search }}" placeholder="Search knowledgebase by medicine, generic name, or category..." style="flex:1; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px;">
+            <button type="submit" class="btn btn-primary">Search</button>
+            {% if search %}
+            <a href="{{ url_for('admin.medicines') }}" class="btn btn-outline">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Medicines List -->
+    <div style="display:flex; flex-direction:column; gap:14px;">
+        {% for m in medicines %}
+        <div class="card" style="padding:18px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+                <div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <h3 style="margin:0; font-size:1.15rem; color:#0f172a;">{{ m.name }}</h3>
+                        <span style="background:#e0e7ff; color:#3730a3; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:700;">
+                            {{ m.category or 'General' }}
+                        </span>
+                    </div>
+                    <div style="font-size:0.85rem; color:#64748b; margin-top:2px;">
+                        Active: <strong>{{ m.generic_name or 'N/A' }}</strong> • Strengths: {{ m.standard_strength or 'Standard' }}
+                    </div>
+                </div>
+
+                <div style="background:#fef3c7; color:#92400e; padding:4px 10px; border-radius:6px; font-size:0.8rem; font-weight:700;">
+                    🍽️ {{ m.before_after_food or 'Take with water' }}
+                </div>
+            </div>
+
+            <div style="margin-top:10px; font-size:0.85rem; color:#334155;">
+                <div><strong>Uses:</strong> {{ m.common_uses }}</div>
+                <div style="margin-top:2px;"><strong>Side Effects:</strong> {{ m.side_effects }}</div>
+                {% if m.known_interactions %}
+                <div style="margin-top:2px; color:#dc2626;">
+                    <strong>Interacts With:</strong> {{ m.known_interactions }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+[
+  {
+    "name": "Metformin",
+    "generic_name": "Metformin Hydrochloride",
+    "active_ingredients": ["metformin"],
+    "common_forms": ["Tablet", "Extended-release Tablet"],
+    "category": "Antidiabetic",
+    "purpose": "Type 2 Diabetes glycemic control"
+  },
+  {
+    "name": "Aspirin",
+    "generic_name": "Acetylsalicylic Acid",
+    "active_ingredients": ["aspirin"],
+    "common_forms": ["Tablet", "Chewable Tablet"],
+    "category": "Antiplatelet / NSAID",
+    "purpose": "Cardiovascular risk reduction, mild pain/inflammation"
+  },
+  {
+    "name": "Warfarin",
+    "generic_name": "Warfarin Sodium",
+    "active_ingredients": ["warfarin"],
+    "common_forms": ["Tablet"],
+    "category": "Anticoagulant",
+    "purpose": "Thrombosis and embolism prevention"
+  },
+  {
+    "name": "Atorvastatin",
+    "generic_name": "Atorvastatin Calcium",
+    "active_ingredients": ["atorvastatin"],
+    "common_forms": ["Tablet"],
+    "category": "Statin / Lipid-lowering",
+    "purpose": "High cholesterol and cardiovascular prevention"
+  },
+  {
+    "name": "Amoxicillin",
+    "generic_name": "Amoxicillin Trihydrate",
+    "active_ingredients": ["amoxicillin"],
+    "common_forms": ["Capsule", "Suspension"],
+    "category": "Antibiotic",
+    "purpose": "Susceptible bacterial infections"
+  },
+  {
+    "name": "Paracetamol",
+    "generic_name": "Acetaminophen",
+    "active_ingredients": ["paracetamol"],
+    "common_forms": ["Tablet", "Syrup"],
+    "category": "Analgesic / Antipyretic",
+    "purpose": "Fever and mild to moderate pain relief"
+  },
+  {
+    "name": "Lisinopril",
+    "generic_name": "Lisinopril Dihydrate",
+    "active_ingredients": ["lisinopril"],
+    "common_forms": ["Tablet"],
+    "category": "ACE Inhibitor",
+    "purpose": "Hypertension and heart failure management"
+  }
+]

@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}Safety Check – MediMitra{% endblock %}
+{% block page_title %}Safety & Interaction Check{% endblock %}
+
+{% block content %}
+<!-- Safety Overview Banner -->
+<div class="card mb-6" style="border-left: 4px solid var(--primary-600);">
+    <div class="card-body">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
+            <div>
+                <h3 style="display:flex; align-items:center; gap:8px;">
+                    <i data-lucide="shield-check" style="color:var(--primary-600)"></i>
+                    Conservative Medicine Safety Engine
+                </h3>
+                <p class="text-muted" style="margin-top:4px; max-width:680px;">
+                    MediMitra evaluates active ingredients against peer-reviewed interaction datasets. 
+                    If interaction data is unavailable for an uncommon combination, MediMitra alerts you to consult your pharmacist rather than falsely assuming it is safe.
+                </p>
+            </div>
+            <div>
+                <span class="tag tag-success" style="padding: 6px 12px; font-size: 0.85rem;">
+                    <i data-lucide="database" style="width:14px;height:14px;margin-right:4px;"></i>
+                    {{ known_count }} Verified Rules Active
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon stat-icon-blue">
+            <i data-lucide="pill"></i>
+        </div>
+        <div class="stat-info">
+            <span class="stat-label">Cabinet Checked</span>
+            <span class="stat-value">{{ total_meds }}</span>
+            <span class="stat-sub">Active medicines</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon {% if interactions %}stat-icon-red{% else %}stat-icon-green{% endif %}">
+            <i data-lucide="alert-octagon"></i>
+        </div>
+        <div class="stat-info">
+            <span class="stat-label">Drug Interactions</span>
+            <span class="stat-value">{{ interactions|length }}</span>
+            <span class="stat-sub">{% if interactions %}Requires attention{% else %}None detected{% endif %}</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon {% if duplicates %}stat-icon-orange{% else %}stat-icon-green{% endif %}">
+            <i data-lucide="copy"></i>
+        </div>
+        <div class="stat-info">
+            <span class="stat-label">Duplicate Ingredients</span>
+            <span class="stat-value">{{ duplicates|length }}</span>
+            <span class="stat-sub">Overdose prevention</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon {% if expiries %}stat-icon-red{% else %}stat-icon-green{% endif %}">
+            <i data-lucide="calendar-x"></i>
+        </div>
+        <div class="stat-info">
+            <span class="stat-label">Expired Medicines</span>
+            <span class="stat-value">{{ expiries|length }}</span>
+            <span class="stat-sub">Disposal recommended</span>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Drug Interaction Pair Checker -->
+<div class="card mb-6">
+    <div class="card-header">
+        <h3><i data-lucide="git-compare" style="width:18px;height:18px;margin-right:6px;color:var(--primary-600)"></i> Check Interaction Between Two Drugs</h3>
+    </div>
+    <div class="card-body">
+        <form method="post" action="{{ url_for('safety.check_pair') }}" style="display:flex; gap: 12px; flex-wrap:wrap; align-items:flex-end;">
+            <div class="form-group" style="flex:1; min-width:200px; margin-bottom:0;">
+                <label for="drug_a">First Drug / Ingredient</label>
+                <input type="text" id="drug_a" name="drug_a" class="form-input" required placeholder="e.g. Aspirin, Warfarin, Ibuprofen">
+            </div>
+            <div class="form-group" style="flex:1; min-width:200px; margin-bottom:0;">
+                <label for="drug_b">Second Drug / Ingredient</label>
+                <input type="text" id="drug_b" name="drug_b" class="form-input" required placeholder="e.g. Metformin, Lisinopril">
+            </div>
+            <button type="submit" class="btn btn-primary" style="height: 42px;">
+                <i data-lucide="search"></i>
+                <span>Check Pair</span>
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Detailed Live Findings -->
+{% if interactions %}
+<div class="card mb-6" style="border-left: 4px solid var(--danger);">
+    <div class="card-header" style="background: var(--danger-light);">
+        <h3 style="color: #991b1b; display:flex; align-items:center; gap:8px;">
+            <i data-lucide="alert-triangle"></i> Drug Interactions Detected
+        </h3>
+    </div>
+    <div class="card-body">
+        <div class="dose-list">
+            {% for item in interactions %}
+            <div class="dose-item" style="border-left: 3px solid var(--danger); padding-left: 12px;">
+                <div class="dose-info">
+                    <div class="dose-medicine" style="color: #991b1b;">
+                        {{ item.medicines|join(' + ') }}
+                    </div>
+                    <div class="dose-details" style="margin-top: 4px; color: var(--gray-700);">
+                        {{ item.explanation }}
+                    </div>
+                    <div style="margin-top: 6px; font-size: 0.78rem; color: var(--gray-500);">
+                        Source: <strong>{{ item.source }}</strong> &bull; Verification: 
+                        <span class="tag tag-success" style="font-size: 0.7rem;">{{ item.verification_status }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if duplicates %}
+<div class="card mb-6" style="border-left: 4px solid var(--warning);">
+    <div class="card-header" style="background: var(--warning-light);">
+        <h3 style="color: #92400e; display:flex; align-items:center; gap:8px;">
+            <i data-lucide="copy"></i> Duplicate Active Ingredients Found
+        </h3>
+    </div>
+    <div class="card-body">
+        <div class="dose-list">
+            {% for item in duplicates %}
+            <div class="dose-item" style="border-left: 3px solid var(--warning); padding-left: 12px;">
+                <div class="dose-info">
+                    <div class="dose-medicine" style="color: #92400e;">
+                        {{ item.medicines|join(' and ') }}
+                    </div>
+                    <div class="dose-details" style="margin-top: 4px;">
+                        {{ item.explanation }} Taking both could lead to an accidental double-dose.
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if expiries %}
+<div class="card mb-6" style="border-left: 4px solid var(--danger);">
+    <div class="card-header">
+        <h3 style="color: var(--danger); display:flex; align-items:center; gap:8px;">
+            <i data-lucide="calendar-x"></i> Expired Medications
+        </h3>
+    </div>
+    <div class="card-body">
+        <div class="dose-list">
+            {% for item in expiries %}
+            <div class="dose-item">
+                <div class="dose-info">
+                    <div class="dose-medicine">{{ item.medicines|join(', ') }}</div>
+                    <div class="dose-details" style="color: var(--danger);">{{ item.explanation }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if not interactions and not duplicates and not expiries %}
+<div class="card mb-6">
+    <div class="card-body">
+        <div class="empty-state">
+            <i data-lucide="check-circle-2" style="color: var(--success); width: 48px; height: 48px;"></i>
+            <h4>All Clear: No Direct Safety Conflicts Detected</h4>
+            <p>Your currently registered medications do not have any detected duplicate ingredients or critical interaction alerts in the verified dataset.</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Saved Safety Alerts in Database -->
+{% if saved_alerts %}
+<div class="card">
+    <div class="card-header">
+        <h3><i data-lucide="bell-ring" style="width:18px;height:18px;margin-right:6px;color:var(--primary-600)"></i> Recorded Alerts Log</h3>
+    </div>
+    <div class="card-body">
+        <table>
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Alert Title</th>
+                    <th>Description</th>
+                    <th>Created At</th>
+                    <th style="text-align:right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in saved_alerts %}
+                <tr>
+                    <td>
+                        <span class="tag {% if a.severity == 'critical' or a.severity == 'high' %}tag-danger{% elif a.severity == 'medium' %}tag-warning{% else %}tag-info{% endif %}">
+                            {{ a.alert_type|capitalize }}
+                        </span>
+                    </td>
+                    <td><strong>{{ a.title }}</strong></td>
+                    <td style="font-size:0.85rem; color: var(--gray-600);">{{ a.description }}</td>
+                    <td style="font-size:0.8rem;">{{ a.created_at }}</td>
+                    <td style="text-align:right;">
+                        <form method="post" action="{{ url_for('safety.dismiss_alert', alert_id=a.id) }}" style="display:inline;">
+                            <button type="submit" class="btn btn-sm btn-outline">Dismiss</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

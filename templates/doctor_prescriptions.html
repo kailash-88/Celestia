@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Prescription Review Requests – Doctor Portal{% endblock %}
+{% block page_title %}Prescription Review Requests{% endblock %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 0 auto;">
+
+    <div style="margin-bottom: 24px;">
+        <h2>Assigned Prescription Review Requests 📋</h2>
+        <p style="color:#64748b;">Review AI-extracted patient prescriptions, verify drug names and dosages, and authorize them for patient medicine schedules.</p>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:16px;">
+        {% if prescriptions %}
+            {% for p in prescriptions %}
+            <div class="card" style="padding:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; border-left:4px solid {% if p.status == 'approved' %}#16a34a{% elif p.status == 'under_review' %}#f59e0b{% elif p.status == 'rejected' %}#ef4444{% else %}#0284c7{% endif %};">
+                <div>
+                    <span style="font-size:0.75rem; text-transform:uppercase; font-weight:700; color:#64748b;">
+                        Patient: {{ p.patient_name }}
+                    </span>
+                    <h3 style="margin:4px 0; font-size:1.15rem; color:#0f172a;">
+                        Prescription #{{ p.id }}
+                    </h3>
+                    <div style="font-size:0.85rem; color:#64748b;">
+                        Submitted: {{ p.patient_confirmed_at or p.scan_date }} • Status: 
+                        <strong style="text-transform:uppercase; color:{% if p.status == 'approved' %}#16a34a{% elif p.status == 'under_review' %}#d97706{% else %}#dc2626{% endif %};">
+                            {{ p.status }}
+                        </strong>
+                    </div>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <a href="{{ url_for('doctor.review', prescription_id=p.id) }}" class="btn btn-primary" style="background:#059669; border:none; display:inline-flex; align-items:center; gap:6px;">
+                        <i data-lucide="eye" style="width:16px;height:16px;"></i>
+                        <span>{% if p.status == 'under_review' %}Review &amp; Approve{% else %}View Details{% endif %}</span>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="card" style="text-align:center; padding:48px; color:#64748b;">
+                <i data-lucide="inbox" style="width:48px;height:48px;color:#cbd5e1;margin-bottom:12px;"></i>
+                <p style="margin:0; font-weight:600;">No prescriptions in queue.</p>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

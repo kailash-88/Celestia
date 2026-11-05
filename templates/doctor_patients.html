@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Patient Management – Doctor Portal{% endblock %}
+{% block page_title %}Patient Management{% endblock %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 0 auto;">
+
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom: 24px;">
+        <div>
+            <h2>Assigned Patients &amp; Health Profiles 👥</h2>
+            <p style="color:#64748b;">Monitor patient medical histories, adherence rates, active medications, and clinical safety.</p>
+        </div>
+        <a href="{{ url_for('doctor.create_prescription') }}" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px;">
+            <i data-lucide="file-plus"></i>
+            <span>New Prescription</span>
+        </a>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="card" style="padding:16px; margin-bottom:24px;">
+        <form method="GET" style="display:flex; gap:12px;">
+            <input type="text" name="q" value="{{ search }}" placeholder="Search patients by name or email..." style="flex:1; padding:10px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:0.95rem;">
+            <button type="submit" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px;">
+                <i data-lucide="search" style="width:16px; height:16px;"></i>
+                <span>Search</span>
+            </button>
+            {% if search %}
+            <a href="{{ url_for('doctor.patients') }}" class="btn btn-outline">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Patients List -->
+    <div style="display:flex; flex-direction:column; gap:16px;">
+        {% if patients %}
+            {% for p in patients %}
+            <div class="card" style="padding:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+                <div style="display:flex; align-items:center; gap:16px;">
+                    <div style="background:#e0f2fe; color:#0369a1; width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1.2rem;">
+                        {{ p.full_name[0] | upper }}
+                    </div>
+                    <div>
+                        <div style="font-weight:700; font-size:1.1rem; color:#0f172a;">{{ p.full_name }}</div>
+                        <div style="font-size:0.85rem; color:#64748b;">
+                            {{ p.email }} • Phone: {{ p.phone or 'N/A' }}
+                        </div>
+                        <div style="font-size:0.85rem; color:#334155; margin-top:4px;">
+                            <strong>Age/Gender:</strong> {{ p.age or '64' }} yrs ({{ p.gender or 'M' }}) • 
+                            <strong>Blood:</strong> {{ p.blood_group or 'B+' }}
+                        </div>
+                        {% if p.allergies %}
+                        <div style="font-size:0.8rem; color:#dc2626; margin-top:2px;">
+                            <strong>Allergies:</strong> {{ p.allergies }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:20px;">
+                    <div style="text-align:right;">
+                        <div style="font-size:0.75rem; color:#64748b; font-weight:700; text-transform:uppercase;">Adherence Rate</div>
+                        <div style="font-size:1.2rem; font-weight:800; color:{% if (p.adherence_rate or 100) >= 80 %}#16a34a{% elif (p.adherence_rate or 100) >= 60 %}#d97706{% else %}#dc2626{% endif %};">
+                            {{ p.adherence_rate or 100 }}%
+                        </div>
+                        <div style="font-size:0.75rem; color:#64748b;">{{ p.active_medicines or 0 }} active medicines</div>
+                    </div>
+
+                    <a href="{{ url_for('doctor.patient_detail', patient_id=p.id) }}" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:6px;">
+                        <span>View Profile</span>
+                        <i data-lucide="chevron-right" style="width:16px; height:16px;"></i>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="card" style="text-align:center; padding:48px; color:#64748b;">
+                <p style="margin:0; font-weight:600;">No patients found matching your search.</p>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

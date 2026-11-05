@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Create Digital Prescription – Doctor Portal{% endblock %}
+{% block page_title %}Issue Digital Prescription{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto;">
+
+    <div style="margin-bottom: 24px;">
+        <h2>Issue Digital Prescription ✍️</h2>
+        <p style="color:#64748b;">Directly prescribe verified medications and schedules to your patient. Approved medicines will automatically enter their medicine cabinet and reminder schedule.</p>
+    </div>
+
+    <form method="POST" class="card" style="padding: 24px;">
+        
+        <!-- Patient Selection -->
+        <div style="margin-bottom: 20px;">
+            <label style="font-weight:700; font-size:0.9rem; display:block; margin-bottom:6px;">Select Patient:</label>
+            <select name="patient_id" required style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.95rem;">
+                <option value="">-- Choose a patient --</option>
+                {% for p in patients %}
+                <option value="{{ p.id }}">{{ p.full_name }} ({{ p.email }})</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Medicines Form -->
+        <div id="medicinesContainer">
+            <h3 style="margin: 0 0 12px 0; font-size:1.05rem;">Prescribed Medicines:</h3>
+            
+            <div class="med-row" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:16px; margin-bottom:14px;">
+                <div style="display:grid; grid-template-columns: 2fr 1fr; gap:12px; margin-bottom:10px;">
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:700; color:#64748b;">Medicine Name:</label>
+                        <input type="text" name="med_name" placeholder="e.g. Atorva 10 or Dolo 650" required style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:700; color:#64748b;">Dosage Strength:</label>
+                        <input type="text" name="dosage" placeholder="e.g. 10mg" value="10mg" style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px;">
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 2fr; gap:12px;">
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:700; color:#64748b;">Frequency:</label>
+                        <select name="frequency" style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px;">
+                            <option value="Once daily (Morning)">Once daily (Morning)</option>
+                            <option value="Once daily (Night)">Once daily (Night)</option>
+                            <option value="Twice daily (Morning & Night)">Twice daily (Morning & Night)</option>
+                            <option value="Three times daily">Three times daily</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:700; color:#64748b;">Meal Instructions:</label>
+                        <input type="text" name="instructions" value="Take after food with water" style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Clinical Notes -->
+        <div style="margin-bottom: 20px;">
+            <label style="font-weight:700; font-size:0.9rem; display:block; margin-bottom:6px;">Clinical Notes / Dietary Advice:</label>
+            <textarea name="notes" rows="3" placeholder="e.g. Advised low salt diet, drink 2L water daily, review after 30 days." style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit;"></textarea>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #e2e8f0; padding-top:16px;">
+            <a href="{{ url_for('doctor.index') }}" class="btn btn-outline">Cancel</a>
+            <button type="submit" class="btn btn-primary" style="background:#059669; border:none; padding:10px 20px; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
+                <i data-lucide="check-circle-2"></i>
+                <span>Sign &amp; Issue Prescription</span>
+            </button>
+        </div>
+
+    </form>
+
+</div>
+{% endblock %}

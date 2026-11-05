@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% block title %}Schedule – MediMitra{% endblock %}
+{% block page_title %}Medicine Schedule & Reminders{% endblock %}
+
+{% block content %}
+<div class="quick-actions" style="justify-content: flex-end;">
+    <button class="btn btn-primary" onclick="document.getElementById('addScheduleModal').style.display='block'">
+        <i data-lucide="calendar-plus"></i>
+        <span>Add Schedule</span>
+    </button>
+</div>
+
+<!-- Modal / Form for Creating New Schedule -->
+<div id="addScheduleModal" class="card mb-6" style="border: 2px solid var(--primary-200);">
+    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <h3><i data-lucide="plus-circle" style="width:18px;height:18px;margin-right:6px;color:var(--primary-600)"></i> Set Up Dose Schedule</h3>
+        <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('addScheduleModal').style.display='none'">Close</button>
+    </div>
+    <div class="card-body">
+        {% if user_meds %}
+        <form method="post" action="{{ url_for('schedule.add') }}">
+            <div class="form-row">
+                <div class="form-group" style="flex:2;">
+                    <label for="medicine_id">Medicine *</label>
+                    <select id="medicine_id" name="medicine_id" class="form-select" required>
+                        <option value="">Select a medicine from cabinet...</option>
+                        {% for m in user_meds %}
+                        <option value="{{ m.id }}">{{ m.name }} {% if m.dosage %}({{ m.dosage }}){% endif %}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="time_of_day">Time Slot *</label>
+                    <select id="time_of_day" name="time_of_day" class="form-select" required>
+                        <option value="morning">Morning</option>
+                        <option value="afternoon">Afternoon</option>
+                        <option value="evening">Evening</option>
+                        <option value="night">Night</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="scheduled_time">Target Time *</label>
+                    <input type="time" id="scheduled_time" name="scheduled_time" class="form-input" required value="08:00">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="dosage_amount">Dose Amount</label>
+                    <input type="text" id="dosage_amount" name="dosage_amount" class="form-input" placeholder="e.g. 1 Tablet, 5ml">
+                </div>
+                <div class="form-group">
+                    <label for="instructions">Instructions</label>
+                    <input type="text" id="instructions" name="instructions" class="form-input" placeholder="e.g. After food with glass of water">
+                </div>
+                <div class="form-group">
+                    <label for="start_date">Start Date</label>
+                    <input type="date" id="start_date" name="start_date" class="form-input" value="{{ today }}">
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content: flex-end; gap: 10px; margin-top: 16px;">
+                <button type="submit" class="btn btn-primary">
+                    <i data-lucide="check"></i>
+                    <span>Save Schedule</span>
+                </button>
+            </div>
+        </form>
+        {% else %}
+        <div class="empty-state" style="padding: 16px;">
+            <p>You don't have any medicines registered yet. Please add a medicine first.</p>
+            <a href="{{ url_for('medicines.add') }}" class="btn btn-primary btn-sm mt-4">Add Medicine First</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Daily Routine / Schedule Slots -->
+<div class="card mb-6">
+    <div class="card-header">
+        <h3><i data-lucide="clock" style="width:18px;height:18px;margin-right:6px;color:var(--primary-600)"></i> Daily Routine</h3>
+    </div>
+    <div class="card-body">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+            {% for slot in ["morning", "afternoon", "evening", "night"] %}
+            <div style="background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: var(--radius-md); padding: 16px;">
+                <h4 style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 12px; color: var(--gray-800); text-transform: capitalize;">
+                    <span>{{ slot }}</span>
+                    <span class="badge" style="font-size:0.75rem;">{{ grouped[slot]|length }}</span>
+                </h4>
+                <div class="dose-list">
+                    {% for s in grouped[slot] %}
+                    <div class="dose-item" style="background: var(--bg-card); border-radius: var(--radius-sm); padding: 10px; margin-bottom: 8px;">
+                        <span class="dose-time" style="font-weight:600;">{{ s.scheduled_time }}</span>
+                        <div class="dose-info" style="margin-left: 10px; flex:1;">
+                            <div class="dose-medicine">{{ s.medicine_name }}</div>
+                            <div class="dose-details">{{ s.dosage_amount or s.med_dosage or '1 dose' }} {{ s.instructions or '' }}</div>
+                        </div>
+                        <form method="post" action="{{ url_for('schedule.delete', schedule_id=s.id) }}" onsubmit="return confirm('Remove schedule for {{ s.medicine_name }}?');">
+                            <button type="submit" class="btn btn-sm btn-outline" style="padding: 4px 6px; color: var(--danger);" title="Remove">
+                                <i data-lucide="trash-2" style="width:14px;height:14px;"></i>
+                            </button>
+                        </form>
+                    </div>
+                    {% else %}
+                    <p class="text-muted" style="font-size: 0.85rem;">No medicines scheduled.</p>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Dose History & Adherence -->
+<div class="card">
+    <div class="card-header">
+        <h3><i data-lucide="activity" style="width:18px;height:18px;margin-right:6px;color:var(--primary-600)"></i> Recent Dose Logs</h3>
+    </div>
+    <div class="card-body">
+        {% if logs %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Medicine</th>
+                    <th>Time Slot</th>
+                    <th>Status</th>
+                    <th>Scheduled For</th>
+                    <th style="text-align:right;">Log Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for l in logs %}
+                <tr>
+                    <td><strong>{{ l.medicine_name or 'Prescribed Medicine' }}</strong></td>
+                    <td style="text-transform: capitalize;">{{ l.time_of_day or 'Scheduled' }}</td>
+                    <td>
+                        {% if l.status == 'taken' %}
+                        <span class="tag tag-success">Taken</span>
+                        {% elif l.status == 'missed' %}
+                        <span class="tag tag-danger">Missed</span>
+                        {% else %}
+                        <span class="tag tag-warning">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-size: 0.85rem;">{{ l.scheduled_for }}</td>
+                    <td style="text-align:right;">
+                        {% if l.status == 'pending' %}
+                        <form method="post" action="{{ url_for('schedule.mark_dose', log_id=l.id, status='taken') }}" style="display:inline">
+                            <button class="btn btn-sm btn-primary">Take</button>
+                        </form>
+                        <form method="post" action="{{ url_for('schedule.mark_dose', log_id=l.id, status='missed') }}" style="display:inline">
+                            <button class="btn btn-sm btn-secondary">Missed</button>
+                        </form>
+                        {% else %}
+                        <span class="text-muted" style="font-size: 0.8rem;">Logged</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state" style="padding: 24px;">
+            <i data-lucide="calendar-check"></i>
+            <h4>No Dose Logs Yet</h4>
+            <p>Once schedules are set up, doses will appear here for you to mark as taken or missed.</p>
+        </div>
+        {% endif %}
+        <p class="text-muted text-xs mt-4">MediMitra adheres to clinical safety guidelines: never take a double dose to make up for a missed dose. Consult your doctor if unsure.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/schedule.js') }}"></script>
+{% endblock %}

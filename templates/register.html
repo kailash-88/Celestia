@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}Register – MediMitra{% endblock %}
+
+{% block content_auth %}
+<div class="auth-container register-layout">
+    <div class="auth-card">
+        <!-- Branding -->
+        <div class="auth-header">
+            <div class="logo-icon logo-icon-lg">
+                <i data-lucide="heart-pulse"></i>
+            </div>
+            <h1>Create Account</h1>
+            <p class="auth-subtitle">Join MediMitra and take control of your medications</p>
+        </div>
+
+        <!-- Registration Form -->
+        <form method="POST" action="{{ url_for('auth.register') }}" class="auth-form" id="registerForm">
+            <div class="form-group">
+                <label for="full_name">Full Name</label>
+                <div class="input-wrapper">
+                    <i data-lucide="user"></i>
+                    <input type="text" id="full_name" name="full_name" placeholder="Enter your full name" required
+                        autofocus>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="username">Username</label>
+                <div class="input-wrapper">
+                    <i data-lucide="at-sign"></i>
+                    <input type="text" id="username" name="username" placeholder="Choose a username" required
+                        minlength="3" autocomplete="username">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <div class="input-wrapper">
+                    <i data-lucide="mail"></i>
+                    <input type="email" id="email" name="email" placeholder="your@email.com" required
+                        autocomplete="email">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrapper">
+                        <i data-lucide="lock"></i>
+                        <input type="password" id="password" name="password" placeholder="Min. 6 characters" required
+                            minlength="6" autocomplete="new-password">
+                        <button type="button" class="toggle-password" aria-label="Show password"
+                            onclick="togglePassword('password', this)">
+                            <i data-lucide="eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm_password">Confirm Password</label>
+                    <div class="input-wrapper">
+                        <i data-lucide="lock"></i>
+                        <input type="password" id="confirm_password" name="confirm_password"
+                            placeholder="Re-enter password" required minlength="6" autocomplete="new-password">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>I am a</label>
+                <div class="role-selector">
+                    <label class="role-card role-selected" id="rolePatient">
+                        <input type="radio" name="role" value="patient" checked>
+                        <i data-lucide="user-round"></i>
+                        <span>Patient</span>
+                        <small>Manage my medicines</small>
+                    </label>
+                    <label class="role-card" id="roleCaregiver">
+                        <input type="radio" name="role" value="caregiver">
+                        <i data-lucide="hand-helping"></i>
+                        <span>Caregiver</span>
+                        <small>Help someone else</small>
+                    </label>
+                    <label class="role-card" id="roleDoctor">
+                        <input type="radio" name="role" value="doctor">
+                        <i data-lucide="stethoscope"></i>
+                        <span>Doctor</span>
+                        <small>Apply for professional review access</small>
+                    </label>
+                    <label class="role-card" id="rolePharmacist">
+                        <input type="radio" name="role" value="pharmacist">
+                        <i data-lucide="store"></i>
+                        <span>Pharmacist</span>
+                        <small>Apply for pharmacy access</small>
+                    </label>
+                </div>
+            </div>
+
+            <div class="doctor-fields" id="doctorFields" hidden>
+                <p class="text-muted">Doctor accounts stay pending until an administrator verifies the professional details.</p>
+                <div class="form-group"><label for="specialty">Specialty *</label><select id="specialty" name="specialty"><option value="">Choose specialty</option>{% for item in ['General Medicine','Cardiology','Dermatology','Neurology','Orthopedics','Pediatrics','Gynecology','Endocrinology','Gastroenterology','Psychiatry','Pulmonology'] %}<option>{{ item }}</option>{% endfor %}</select></div>
+                <div class="form-group"><label for="license_number">Professional registration number *</label><input id="license_number" name="license_number" maxlength="100"></div>
+                <div class="form-group"><label for="qualifications">Qualifications</label><input id="qualifications" name="qualifications" maxlength="240"></div>
+            </div>
+            <div class="doctor-fields" id="pharmacyFields" hidden>
+                <p class="text-muted">Pharmacy accounts stay pending until an administrator verifies the registration details.</p>
+                <div class="form-group"><label for="pharmacy_name">Pharmacy name *</label><input id="pharmacy_name" name="pharmacy_name" maxlength="160"></div>
+                <div class="form-group"><label for="pharmacy_license">Pharmacy registration number *</label><input id="pharmacy_license" name="pharmacy_license" maxlength="100"></div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full">
+                <i data-lucide="user-plus"></i>
+                <span>Create Account</span>
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function togglePassword(inputId, btn) {
+        const input = document.getElementById(inputId);
+        if (input.type === 'password') {
+            input.type = 'text';
+            btn.innerHTML = '<i data-lucide="eye-off"></i>';
+        } else {
+            input.type = 'password';
+            btn.innerHTML = '<i data-lucide="eye"></i>';
+        }
+        lucide.createIcons();
+    }
+
+    // Role selector interactivity
+    document.querySelectorAll('.role-card').forEach(card => {
+        card.addEventListener('click', () => {
+            document.querySelectorAll('.role-card').forEach(c => c.classList.remove('role-selected'));
+            card.classList.add('role-selected');
+            const role = card.querySelector('input[name="role"]').value;
+            const isDoctor = role === 'doctor';
+            const isPharmacist = role === 'pharmacist';
+            const doctorFields = document.getElementById('doctorFields');
+            doctorFields.hidden = !isDoctor;
+            doctorFields.querySelectorAll('input, select').forEach(field => field.required = isDoctor && field.name !== 'qualifications');
+            const pharmacyFields = document.getElementById('pharmacyFields');
+            pharmacyFields.hidden = !isPharmacist;
+            pharmacyFields.querySelectorAll('input').forEach(field => field.required = isPharmacist);
+        });
+    });
+</script>
+{% endblock %}

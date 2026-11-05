@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+{% block title %}Doctor Clinical Dashboard – MediMitra{% endblock %}
+{% block page_title %}Doctor Clinical Dashboard{% endblock %}
+
+{% block content %}
+{% if not profile or profile.verification_status != 'verified' %}
+<div class="card" style="text-align:center; padding:48px 24px; max-width:600px; margin:40px auto; border-top:4px solid #f59e0b;">
+    <div style="background:#fef3c7; width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px auto; color:#d97706;">
+        <i data-lucide="shield-alert" style="width:32px; height:32px;"></i>
+    </div>
+    <h2>Professional Medical Verification Pending</h2>
+    <p style="color:#64748b; margin:10px 0 20px 0;">Your medical license credentials have been submitted for administrator verification. Once verified, clinical prescription review, patient management, and communication tools will become active.</p>
+    {% if profile %}
+    <div style="background:#f8fafc; padding:12px; border-radius:8px; display:inline-block; font-size:0.9rem; text-align:left;">
+        <div><strong>Specialty:</strong> {{ profile.specialty }}</div>
+        <div><strong>Registration Number:</strong> {{ profile.license_number }}</div>
+        <div><strong>Status:</strong> <span style="color:#d97706; font-weight:700;">Pending Review</span></div>
+    </div>
+    {% endif %}
+</div>
+{% else %}
+
+<!-- Doctor Welcome Banner -->
+<div class="welcome-banner" style="background: linear-gradient(135deg, #065f46 0%, #047857 100%); color:white; border-radius:12px; padding:24px; margin-bottom:24px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+    <div>
+        <h2 style="margin:0 0 4px 0; color:white;">Dr. {{ current_user.full_name }} 🩺</h2>
+        <p style="margin:0; opacity:0.9; font-size:0.95rem;">{{ profile.specialty }} • License: {{ profile.license_number }} • Verified Medical Reviewer</p>
+    </div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <a href="{{ url_for('doctor.create_prescription') }}" class="btn btn-primary" style="background:linear-gradient(135deg, #10b981, #059669); color:white; font-weight:700; display:inline-flex; align-items:center; gap:6px; border:none; box-shadow:0 4px 14px rgba(16,185,129,0.35);">
+            <i data-lucide="file-plus"></i>
+            <span>Create Prescription</span>
+        </a>
+        <a href="{{ url_for('doctor.patients') }}" class="btn" style="background:rgba(16,185,129,0.15); color:#a7f3d0; border:1px solid rgba(16,185,129,0.35); display:inline-flex; align-items:center; gap:6px;">
+            <i data-lucide="users"></i>
+            <span>Manage Patients</span>
+        </a>
+    </div>
+</div>
+
+<!-- Clinical Key Statistics -->
+<div class="stats-grid" style="margin-bottom:24px;">
+    <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(16,185,129,0.18); color:#34d399; border:1px solid rgba(16,185,129,0.35);"><i data-lucide="users"></i></div>
+        <div class="stat-info">
+            <span class="stat-label">Assigned Patients</span>
+            <span class="stat-value">{{ stats.patients }}</span>
+            <span class="stat-sub">Under clinical care</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#fef3c7; color:#d97706;"><i data-lucide="clipboard-check"></i></div>
+        <div class="stat-info">
+            <span class="stat-label">Pending Prescriptions</span>
+            <span class="stat-value">{{ stats.pending_prescriptions }}</span>
+            <span class="stat-sub">Awaiting your approval</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#e0f2fe; color:#0284c7;"><i data-lucide="messages-square"></i></div>
+        <div class="stat-info">
+            <span class="stat-label">Patient Queries</span>
+            <span class="stat-value">{{ stats.pending_queries }}</span>
+            <span class="stat-sub">Questions to answer</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#fee2e2; color:#dc2626;"><i data-lucide="bell-ring"></i></div>
+        <div class="stat-info">
+            <span class="stat-label">Missed-Dose Alerts</span>
+            <span class="stat-value" style="color:#dc2626;">{{ stats.missed_alerts }}</span>
+            <span class="stat-sub">In last 48 hours</span>
+        </div>
+    </div>
+</div>
+
+<!-- Two-Column Clinical Work Queue -->
+<div class="dashboard-grid">
+
+    <!-- Left Column: Pending Prescriptions & Queries -->
+    <div class="dashboard-main">
+        
+        <!-- Pending Prescription Approval Queue ⭐ -->
+        <div class="card" style="margin-bottom:24px;">
+            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0; display:flex; align-items:center; gap:8px;">
+                    <i data-lucide="clipboard-check" style="color:#059669;"></i>
+                    <span>Prescriptions Awaiting Review &amp; Approval ⭐</span>
+                </h3>
+                <span style="background:#fef3c7; color:#92400e; padding:2px 8px; border-radius:12px; font-weight:700; font-size:0.75rem;">
+                    {{ prescriptions|length }} PENDING
+                </span>
+            </div>
+
+            <div style="padding:16px;">
+                {% if prescriptions %}
+                    {% for p in prescriptions %}
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:10px;">
+                        <div>
+                            <div style="font-weight:700; color:#0f172a; font-size:1.05rem;">
+                                {{ p.patient_name }}
+                            </div>
+                            <div style="font-size:0.85rem; color:#64748b; margin-top:2px;">
+                                Rx #{{ p.id }} • Submitted: {{ p.patient_confirmed_at or p.scan_date }}
+                            </div>
+                        </div>
+                        <a href="{{ url_for('doctor.review', prescription_id=p.id) }}" class="btn btn-primary btn-sm" style="background:#059669; border:none; display:inline-flex; align-items:center; gap:6px;">
+                            <i data-lucide="eye" style="width:14px; height:14px;"></i>
+                            <span>Review &amp; Approve</span>
+                        </a>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align:center; padding:24px; color:#64748b;">
+                        <i data-lucide="check-circle" style="width:36px; height:36px; color:#10b981; margin-bottom:8px;"></i>
+                        <p style="margin:0; font-weight:600;">Prescription queue is clear!</p>
+                        <p style="font-size:0.85rem;">All patient prescriptions have been clinically approved or reviewed.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Incoming Patient Health Queries ⭐ -->
+        <div class="card">
+            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0; display:flex; align-items:center; gap:8px;">
+                    <i data-lucide="message-square" style="color:#0284c7;"></i>
+                    <span>Patient Health Queries &amp; AI Escalations ⭐</span>
+                </h3>
+                <a href="{{ url_for('doctor.queries') }}" style="font-size:0.85rem;">View All Queries &rarr;</a>
+            </div>
+
+            <div style="padding:16px;">
+                {% if queries %}
+                    {% for q in queries %}
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px; margin-bottom:12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                            <div>
+                                <span style="font-size:0.75rem; font-weight:700; color:#0284c7; text-transform:uppercase;">From {{ q.patient_name }}</span>
+                                <div style="font-weight:700; color:#0f172a; margin-top:2px;">{{ q.subject }}</div>
+                                <p style="margin:4px 0 8px 0; color:#334155; font-size:0.9rem;">"{{ q.question }}"</p>
+                            </div>
+                            <span style="background:#fee2e2; color:#dc2626; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:9999px;">Needs Reply</span>
+                        </div>
+
+                        <!-- Quick Reply Form -->
+                        <form method="POST" action="{{ url_for('doctor.respond_query', query_id=q.id) }}" style="display:flex; gap:8px; margin-top:8px;">
+                            <input type="text" name="response" placeholder="Type clinical advice / instructions..." required style="flex:1; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem;">
+                            <button type="submit" class="btn btn-sm" style="background:#059669; color:white; border:none; padding:8px 14px; border-radius:6px; font-weight:600;">
+                                Send Advice
+                            </button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align:center; padding:24px; color:#64748b;">
+                        <i data-lucide="inbox" style="width:36px; height:36px; color:#cbd5e1; margin-bottom:8px;"></i>
+                        <p style="margin:0; font-weight:600;">No pending patient queries.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Right Column: Recent Missed Doses & Clinical Alerts -->
+    <div class="dashboard-sidebar">
+        
+        <div class="card" style="border-top:4px solid #ef4444;">
+            <div class="card-header">
+                <h3 style="margin:0; font-size:1.05rem; display:flex; align-items:center; gap:8px; color:#991b1b;">
+                    <i data-lucide="alert-triangle"></i> Recent Patient Missed Doses
+                </h3>
+            </div>
+            <div style="padding:16px;">
+                {% if recent_missed %}
+                    {% for m in recent_missed %}
+                    <div style="padding:10px 0; border-bottom:1px solid #f1f5f9;">
+                        <div style="font-weight:700; color:#0f172a; font-size:0.95rem;">{{ m.patient_name }}</div>
+                        <div style="font-size:0.85rem; color:#dc2626; font-weight:600;">
+                            Missed: {{ m.medicine_name }}
+                        </div>
+                        <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">
+                            Scheduled: {{ m.scheduled_for }} {% if m.notes %}• Reason: "{{ m.notes }}"{% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p style="font-size:0.85rem; color:#64748b; margin:0;">No missed doses recorded in the past 48 hours. Patients are adhering well to their schedules.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Patient Search Card -->
+        <div class="card" style="margin-top:20px;">
+            <div class="card-header">
+                <h3 style="margin:0; font-size:1.05rem;">Quick Clinical Actions</h3>
+            </div>
+            <div style="padding:16px; display:flex; flex-direction:column; gap:10px;">
+                <a href="{{ url_for('doctor.patients') }}" class="btn btn-outline" style="text-align:left; display:flex; align-items:center; gap:8px;">
+                    <i data-lucide="search" style="width:16px;height:16px;"></i>
+                    <span>Search Patient Profiles</span>
+                </a>
+                <a href="{{ url_for('doctor.create_prescription') }}" class="btn btn-outline" style="text-align:left; display:flex; align-items:center; gap:8px;">
+                    <i data-lucide="file-plus" style="width:16px;height:16px;"></i>
+                    <span>Issue Digital Prescription</span>
+                </a>
+                <a href="{{ url_for('doctor.safety') }}" class="btn btn-outline" style="text-align:left; display:flex; align-items:center; gap:8px;">
+                    <i data-lucide="shield-alert" style="width:16px;height:16px;"></i>
+                    <span>Review Interaction Warnings</span>
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+{% endif %}
+{% endblock %}

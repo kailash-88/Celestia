@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MediMitra – Smart Medicine Companion. Manage medicines, scan prescriptions, and stay safe.">
+    <meta name="theme-color" content="#0284c7">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="MediMitra">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/icon-192.png') }}">
+    <title>{% block title %}MediMitra{% endblock %}</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+    <!-- Chart.js (only on pages that need it) -->
+    {% block head_extra %}{% endblock %}
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block styles %}{% endblock %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+</head>
+<body>
+
+    <!-- ===== MediMitra 3D Cinematic Startup Splash Overlay ===== -->
+    <div id="medimitraSplash" class="splash-overlay" aria-hidden="true">
+        <div class="splash-backdrop-glow"></div>
+        <div class="splash-container">
+            <!-- 3D Holographic Crest / Logo Stage -->
+            <div class="splash-3d-scene">
+                <div class="splash-3d-cube" id="splashCube">
+                    <div class="cube-face cube-front">
+                        <div class="shield-aura"></div>
+                        <svg class="splash-pulse-svg" viewBox="0 0 100 100" fill="none">
+                            <defs>
+                                <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#2dd4bf" />
+                                    <stop offset="50%" stop-color="#0d9488" />
+                                    <stop offset="100%" stop-color="#0284c7" />
+                                </linearGradient>
+                                <linearGradient id="neonGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="#99f6e4" />
+                                    <stop offset="100%" stop-color="#38bdf8" />
+                                </linearGradient>
+                                <filter id="neonBlur" x="-30%" y="-30%" width="160%" height="160%">
+                                    <feGaussianBlur stdDeviation="3" result="blur" />
+                                    <feMerge>
+                                        <feMergeNode in="blur" />
+                                        <feMergeNode in="SourceGraphic" />
+                                    </feMerge>
+                                </filter>
+                            </defs>
+                            <!-- Medical Cross Shield -->
+                            <path d="M50 8 L85 24 C85 58 50 88 50 88 C50 88 15 58 15 24 Z" fill="url(#shieldGrad)" stroke="rgba(255,255,255,0.4)" stroke-width="2.5" />
+                            <!-- Futuristic Glowing ECG Pulse Line -->
+                            <path class="splash-ecg-path" d="M22 50 L36 50 L42 36 L47 64 L53 30 L59 58 L64 50 L78 50" fill="none" stroke="url(#neonGlow)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#neonBlur)" />
+                            <!-- Central Core Light -->
+                            <circle cx="50" cy="50" r="4.5" fill="#ffffff" filter="url(#neonBlur)" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3D Brand Typography -->
+            <div class="splash-brand-wrap">
+                <h1 class="splash-app-title">Medi<span class="splash-title-highlight">Mitra</span></h1>
+                <p class="splash-app-tagline">SMART MEDICINE COMPANION &bull; AI CLINICAL CARE</p>
+            </div>
+
+            <!-- Sleek Glowing Progress Bar -->
+            <div class="splash-loader-track">
+                <div class="splash-loader-bar"></div>
+            </div>
+
+            <div class="splash-audio-badge">
+                <i data-lucide="volume-2"></i>
+                <span>Crystal Audio Active</span>
+            </div>
+        </div>
+    </div>
+
+    {% if current_user %}
+    <!-- ===== Sidebar Navigation ===== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i data-lucide="heart-pulse"></i>
+                </div>
+                <span class="logo-text">MediMitra</span>
+            </div>
+            <button class="sidebar-close" id="sidebarClose" aria-label="Close sidebar">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+
+        <nav class="sidebar-nav">
+            <ul>
+                {% if current_user.role == 'patient' %}
+                <!-- 1. PATIENT DASHBOARD NAVIGATION -->
+                <li class="nav-section-label"><span>Patient Care</span></li>
+                <li><a href="{{ url_for('dashboard.index') }}" class="nav-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}"><i data-lucide="layout-dashboard"></i><span>Health Overview</span></a></li>
+                <li><a href="{{ url_for('scanner.medicine_scan') }}" class="nav-link {% if request.endpoint == 'scanner.medicine_scan' %}active{% endif %}"><i data-lucide="scan"></i><span>AI Medicine Scanner</span></a></li>
+                <li><a href="{{ url_for('scanner.scan') }}" class="nav-link {% if request.endpoint == 'scanner.scan' %}active{% endif %}"><i data-lucide="file-text"></i><span>Prescription Scanner</span></a></li>
+                <li><a href="{{ url_for('prescriptions.index') }}" class="nav-link {% if request.endpoint == 'prescriptions.index' %}active{% endif %}"><i data-lucide="file-check-2"></i><span>My Prescriptions</span></a></li>
+                <li><a href="{{ url_for('medicines.index') }}" class="nav-link {% if request.endpoint and 'medicines' in request.endpoint %}active{% endif %}"><i data-lucide="pill"></i><span>Medicine Cabinet</span></a></li>
+                <li><a href="{{ url_for('schedule.index') }}" class="nav-link {% if request.endpoint and 'schedule' in request.endpoint %}active{% endif %}"><i data-lucide="calendar-clock"></i><span>Smart Reminders</span></a></li>
+                <li><a href="{{ url_for('assistant.index') }}" class="nav-link {% if request.endpoint and 'assistant' in request.endpoint %}active{% endif %}"><i data-lucide="bot"></i><span>AI Health Assistant</span></a></li>
+                <li><a href="{{ url_for('queries.patient_queries') }}" class="nav-link {% if request.endpoint and 'queries' in request.endpoint %}active{% endif %}"><i data-lucide="message-square-plus"></i><span>Ask My Doctor</span></a></li>
+                <li><a href="{{ url_for('records.index') }}" class="nav-link {% if request.endpoint and 'records' in request.endpoint %}active{% endif %}"><i data-lucide="clipboard-list"></i><span>Health Records</span></a></li>
+                <li><a href="{{ url_for('safety.index') }}" class="nav-link {% if request.endpoint and 'safety' in request.endpoint %}active{% endif %}"><i data-lucide="shield-check"></i><span>Safety Centre</span></a></li>
+                <li><a href="{{ url_for('reports.index') }}" class="nav-link {% if request.endpoint and 'reports' in request.endpoint %}active{% endif %}"><i data-lucide="bar-chart-3"></i><span>Adherence Reports</span></a></li>
+
+                {% elif current_user.role == 'doctor' %}
+                <!-- 2. DOCTOR DASHBOARD NAVIGATION -->
+                <li class="nav-section-label"><span>Clinical Suite</span></li>
+                <li><a href="{{ url_for('doctor.index') }}" class="nav-link {% if request.endpoint == 'doctor.index' %}active{% endif %}"><i data-lucide="stethoscope"></i><span>Doctor Overview</span></a></li>
+                <li><a href="{{ url_for('doctor.patients') }}" class="nav-link {% if request.endpoint in ['doctor.patients', 'doctor.patient_detail'] %}active{% endif %}"><i data-lucide="users"></i><span>Patient Management</span></a></li>
+                <li><a href="{{ url_for('doctor.prescriptions') }}" class="nav-link {% if request.endpoint in ['doctor.prescriptions', 'doctor.review'] %}active{% endif %}"><i data-lucide="clipboard-check"></i><span>Prescription Requests</span></a></li>
+                <li><a href="{{ url_for('doctor.queries') }}" class="nav-link {% if request.endpoint == 'doctor.queries' %}active{% endif %}"><i data-lucide="messages-square"></i><span>Patient Queries</span></a></li>
+                <li><a href="{{ url_for('doctor.create_prescription') }}" class="nav-link {% if request.endpoint == 'doctor.create_prescription' %}active{% endif %}"><i data-lucide="file-plus-2"></i><span>Create Prescription</span></a></li>
+                <li><a href="{{ url_for('doctor.safety') }}" class="nav-link {% if request.endpoint == 'doctor.safety' %}active{% endif %}"><i data-lucide="shield-alert"></i><span>Medication Safety</span></a></li>
+
+                {% elif current_user.role == 'caregiver' %}
+                <!-- 3. CAREGIVER DASHBOARD NAVIGATION -->
+                <li class="nav-section-label"><span>Family Care</span></li>
+                <li><a href="{{ url_for('caregiver.index') }}" class="nav-link {% if request.endpoint and 'caregiver' in request.endpoint %}active{% endif %}"><i data-lucide="heart-handshake"></i><span>Caregiver Overview</span></a></li>
+                <li><a href="{{ url_for('caregiver.index') }}#monitoring" class="nav-link"><i data-lucide="pill"></i><span>Medicine Monitoring</span></a></li>
+                <li><a href="{{ url_for('caregiver.index') }}#alerts" class="nav-link"><i data-lucide="bell-ring"></i><span>Missed-Dose Alerts</span></a></li>
+                <li><a href="{{ url_for('caregiver.index') }}#contact" class="nav-link"><i data-lucide="message-circle"></i><span>Contact Doctor</span></a></li>
+
+                {% elif current_user.role == 'admin' %}
+                <!-- 4. ADMIN DASHBOARD NAVIGATION -->
+                <li class="nav-section-label"><span>Administration</span></li>
+                <li><a href="{{ url_for('admin.index') }}" class="nav-link {% if request.endpoint == 'admin.index' %}active{% endif %}"><i data-lucide="layout-grid"></i><span>Admin Overview</span></a></li>
+                <li><a href="{{ url_for('admin.users') }}" class="nav-link {% if request.endpoint == 'admin.users' %}active{% endif %}"><i data-lucide="users"></i><span>User Management</span></a></li>
+                <li><a href="{{ url_for('admin.medicines') }}" class="nav-link {% if request.endpoint == 'admin.medicines' %}active{% endif %}"><i data-lucide="database"></i><span>Medicine Database</span></a></li>
+                <li><a href="{{ url_for('admin.index') }}#verification" class="nav-link"><i data-lucide="user-check"></i><span>Doctor Verification</span></a></li>
+                <li><a href="{{ url_for('admin.index') }}#logs" class="nav-link"><i data-lucide="activity"></i><span>System &amp; AI Logs</span></a></li>
+
+                {% elif current_user.role == 'pharmacist' %}
+                <li class="nav-section-label"><span>Pharmacy</span></li>
+                <li><a href="{{ url_for('pharmacy.index') }}" class="nav-link {% if request.endpoint and 'pharmacy' in request.endpoint %}active{% endif %}"><i data-lucide="store"></i><span>Pharmacy Overview</span></a></li>
+                {% endif %}
+
+                <li class="nav-section-label"><span>Account</span></li>
+                <li><a href="{{ url_for('auth.settings') }}" class="nav-link {% if request.endpoint and 'settings' in request.endpoint %}active{% endif %}"><i data-lucide="settings"></i><span>Settings</span></a></li>
+            </ul>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-card">
+                <div class="user-avatar" style="background: {% if current_user.role == 'doctor' %}#059669{% elif current_user.role == 'admin' %}#4f46e5{% elif current_user.role == 'caregiver' %}#d97706{% else %}#0284c7{% endif %}; color: white;">
+                    {{ current_user.full_name[0] | upper }}
+                </div>
+                <div class="user-info">
+                    <span class="user-name">{{ current_user.full_name }}</span>
+                    <span class="user-role badge-role" style="font-size:0.75rem; text-transform:uppercase; font-weight:700; color:{% if current_user.role == 'doctor' %}#059669{% elif current_user.role == 'admin' %}#4f46e5{% elif current_user.role == 'caregiver' %}#d97706{% else %}#0284c7{% endif %};">
+                        {{ current_user.role }}
+                    </span>
+                </div>
+            </div>
+            <a href="{{ url_for('auth.logout') }}" class="nav-link logout-link">
+                <i data-lucide="log-out"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- ===== Main Content Area ===== -->
+    <main class="main-content" id="mainContent">
+        <!-- Top Bar -->
+        <header class="topbar">
+            <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
+                <i data-lucide="menu"></i>
+            </button>
+            <div class="topbar-title">
+                <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+            </div>
+            <div class="topbar-actions" style="display:flex; align-items:center; gap:12px;">
+                {% if current_user.role == 'patient' %}
+                <form action="{{ url_for('dashboard.trigger_sos') }}" method="POST" onsubmit="return confirm('Trigger Emergency SOS to your designated emergency contact?');" style="margin:0;">
+                    <button type="submit" class="btn" style="background:#ef4444; color:#fff; padding:6px 14px; font-size:0.85rem; border:none; border-radius:6px; display:flex; align-items:center; gap:6px; font-weight:600; cursor:pointer;">
+                        <i data-lucide="alert-triangle" style="width:16px;height:16px;"></i>
+                        <span>SOS</span>
+                    </button>
+                </form>
+                {% endif %}
+                <button type="button" class="icon-btn" onclick="playSplashAnimation(true)" title="Replay 3D Intro & Sound" aria-label="Replay 3D Intro">
+                    <i data-lucide="sparkles"></i>
+                </button>
+                <button class="icon-btn" aria-label="Notifications">
+                    <i data-lucide="bell"></i>
+                    {% if stats is defined and stats.alerts is defined and stats.alerts > 0 %}
+                    <span class="badge">{{ stats.alerts }}</span>
+                    {% endif %}
+                </button>
+            </div>
+        </header>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-container">
+            {% for category, message in messages %}
+            <div class="flash flash-{{ category }}" role="alert">
+                <i data-lucide="{% if category == 'success' %}check-circle{% elif category == 'error' %}alert-circle{% elif category == 'warning' %}alert-triangle{% else %}info{% endif %}"></i>
+                <span>{{ message }}</span>
+                <button class="flash-close" onclick="this.parentElement.remove()" aria-label="Dismiss">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <!-- Page Content -->
+        <div class="page-content">
+            {% block content %}{% endblock %}
+        </div>
+
+        <!-- Medical Disclaimer -->
+        <footer class="disclaimer">
+            <i data-lucide="info" style="width:14px;height:14px"></i>
+            <span>MediMitra is an informational clinical companion. Always follow verified physician instructions.</span>
+        </footer>
+    </main>
+
+    <!-- ===== Frosted Glass Mobile Bottom Navigation Bar ===== -->
+    <nav class="mobile-bottom-nav" aria-label="Mobile Navigation">
+        {% if current_user.role == 'patient' %}
+        <a href="{{ url_for('dashboard.index') }}" class="bottom-nav-item {% if request.endpoint == 'dashboard.index' %}active{% endif %}">
+            <i data-lucide="layout-dashboard"></i>
+            <span>Home</span>
+        </a>
+        <a href="{{ url_for('scanner.medicine_scan') }}" class="bottom-nav-item bottom-nav-highlight {% if request.endpoint == 'scanner.medicine_scan' %}active{% endif %}">
+            <div class="bottom-nav-scan-circle">
+                <i data-lucide="scan"></i>
+            </div>
+            <span>Scan Med</span>
+        </a>
+        <a href="{{ url_for('schedule.index') }}" class="bottom-nav-item {% if request.endpoint and 'schedule' in request.endpoint %}active{% endif %}">
+            <i data-lucide="calendar-clock"></i>
+            <span>Schedule</span>
+        </a>
+        <a href="{{ url_for('prescriptions.index') }}" class="bottom-nav-item {% if request.endpoint == 'prescriptions.index' %}active{% endif %}">
+            <i data-lucide="file-check-2"></i>
+            <span>Rx</span>
+        </a>
+        <a href="{{ url_for('assistant.index') }}" class="bottom-nav-item {% if request.endpoint and 'assistant' in request.endpoint %}active{% endif %}">
+            <i data-lucide="bot"></i>
+            <span>AI Care</span>
+        </a>
+        {% elif current_user.role == 'doctor' %}
+        <a href="{{ url_for('doctor.index') }}" class="bottom-nav-item {% if request.endpoint == 'doctor.index' %}active{% endif %}">
+            <i data-lucide="stethoscope"></i>
+            <span>Overview</span>
+        </a>
+        <a href="{{ url_for('doctor.patients') }}" class="bottom-nav-item {% if 'patient' in request.endpoint %}active{% endif %}">
+            <i data-lucide="users"></i>
+            <span>Patients</span>
+        </a>
+        <a href="{{ url_for('doctor.prescriptions') }}" class="bottom-nav-item {% if 'prescription' in request.endpoint %}active{% endif %}">
+            <i data-lucide="clipboard-check"></i>
+            <span>Reviews</span>
+        </a>
+        <a href="{{ url_for('doctor.queries') }}" class="bottom-nav-item {% if 'queries' in request.endpoint %}active{% endif %}">
+            <i data-lucide="messages-square"></i>
+            <span>Queries</span>
+        </a>
+        {% elif current_user.role == 'caregiver' %}
+        <a href="{{ url_for('caregiver.index') }}" class="bottom-nav-item active">
+            <i data-lucide="heart-handshake"></i>
+            <span>Overview</span>
+        </a>
+        <a href="{{ url_for('caregiver.index') }}#monitoring" class="bottom-nav-item">
+            <i data-lucide="pill"></i>
+            <span>Monitoring</span>
+        </a>
+        <a href="{{ url_for('caregiver.index') }}#alerts" class="bottom-nav-item">
+            <i data-lucide="bell-ring"></i>
+            <span>Alerts</span>
+        </a>
+        <a href="{{ url_for('caregiver.index') }}#contact" class="bottom-nav-item">
+            <i data-lucide="message-circle"></i>
+            <span>Contact</span>
+        </a>
+        {% elif current_user.role == 'admin' %}
+        <a href="{{ url_for('admin.index') }}" class="bottom-nav-item {% if request.endpoint == 'admin.index' %}active{% endif %}">
+            <i data-lucide="layout-grid"></i>
+            <span>Overview</span>
+        </a>
+        <a href="{{ url_for('admin.users') }}" class="bottom-nav-item {% if 'users' in request.endpoint %}active{% endif %}">
+            <i data-lucide="users"></i>
+            <span>Users</span>
+        </a>
+        <a href="{{ url_for('admin.medicines') }}" class="bottom-nav-item {% if 'medicines' in request.endpoint %}active{% endif %}">
+            <i data-lucide="database"></i>
+            <span>Medicines</span>
+        </a>
+        {% endif %}
+    </nav>
+
+    {% else %}
+    <!-- ===== Unauthenticated Layout (Login/Register) ===== -->
+    <main class="auth-layout">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-container">
+            {% for category, message in messages %}
+            <div class="flash flash-{{ category }}" role="alert">
+                <i data-lucide="{% if category == 'success' %}check-circle{% elif category == 'error' %}alert-circle{% elif category == 'warning' %}alert-triangle{% else %}info{% endif %}"></i>
+                <span>{{ message }}</span>
+                <button class="flash-close" onclick="this.parentElement.remove()" aria-label="Dismiss">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        {% block content_auth %}{% endblock %}
+    </main>
+    {% endif %}
+
+    <!-- GSAP (GreenSock Animation Platform) for 3D Transitions & Physics -->
+    <script src="{{ url_for('static', filename='js/gsap.min.js') }}"></script>
+    <!-- Core JS -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    {% block scripts %}{% endblock %}
+
+    <!-- Initialize Lucide icons -->
+    <script>lucide.createIcons();</script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Reports – MediMitra{% endblock %}
+{% block page_title %}Medication Adherence Reports{% endblock %}
+
+{% block head_extra %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<!-- Metric Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon stat-icon-blue">
+            <i data-lucide="calendar"></i>
+        </div>
+        <div class="stat-info">
+            <span class="stat-label">Total Doses Tracked</span>
+            <span class="stat-value">{{ total }}</span>
+            <span class="stat-sub">Across all routines</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon stat-icon-green">
+            <i data-lucide="check-circle-2"></i>
+        </div>
+        <div class="stat-info">
+            <span class="stat-label">Taken on Time</span>
+            <span class="stat-value">{{ taken }}</span>
+            <span class="stat-sub">Completed doses</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon stat-icon-red">
+            <i data-lucide="alert-circle"></i>
+        </div>
+        <div class="stat-info">
+            <span class="stat-label">Missed Doses</span>
+            <span class="stat-value">{{ missed }}</span>
+            <span class="stat-sub">Skipped / unconfirmed</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon stat-icon-teal">
+            <i data-lucide="award"></i>
+        </div>
+        <div class="stat-info">
+            <span class="stat-label">Compliance Rate</span>
+            <span class="stat-value">{{ adherence }}%</span>
+            <span class="stat-sub">Overall adherence</span>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <!-- Adherence Chart -->
+    <div class="card">
+        <div class="card-header">
+            <h3><i data-lucide="pie-chart" style="width:18px;height:18px;margin-right:6px;color:var(--primary-600)"></i> Adherence Breakdown</h3>
+        </div>
+        <div class="card-body" style="display:flex; flex-direction:column; align-items:center;">
+            <div style="width: 260px; height: 260px; position:relative;">
+                <canvas id="adherenceChart"></canvas>
+            </div>
+            <p class="text-muted text-xs mt-4" style="text-align:center;">
+                Clinical note: Higher adherence lowers complication risks for chronic illnesses like hypertension and diabetes.
+            </p>
+        </div>
+    </div>
+
+    <!-- Per-Medicine Breakdown -->
+    <div class="card">
+        <div class="card-header">
+            <h3><i data-lucide="layers" style="width:18px;height:18px;margin-right:6px;color:var(--primary-600)"></i> Medicine-by-Medicine Performance</h3>
+        </div>
+        <div class="card-body">
+            {% if medicine_stats %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Medicine</th>
+                        <th>Taken</th>
+                        <th>Missed</th>
+                        <th>Rate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in medicine_stats %}
+                    {% set m_completed = (m.taken_doses or 0) + (m.missed_doses or 0) %}
+                    {% set m_rate = ((m.taken_doses or 0) / m_completed * 100)|round|int if m_completed > 0 else 100 %}
+                    <tr>
+                        <td>
+                            <strong>{{ m.medicine_name }}</strong>
+                            {% if m.dosage %}<span class="text-muted" style="font-size:0.8rem;"> ({{ m.dosage }})</span>{% endif %}
+                        </td>
+                        <td><span class="tag tag-success">{{ m.taken_doses or 0 }}</span></td>
+                        <td><span class="tag tag-danger">{{ m.missed_doses or 0 }}</span></td>
+                        <td>
+                            <strong style="color: {% if m_rate >= 80 %}var(--success){% elif m_rate >= 50 %}var(--warning){% else %}var(--danger){% endif %};">
+                                {{ m_rate }}%
+                            </strong>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <i data-lucide="bar-chart-2"></i>
+                <p>No dose records available yet to generate medicine-level metrics.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const canvas = document.getElementById('adherenceChart');
+    if (!canvas) return;
+
+    const taken = {{ taken }};
+    const missed = {{ missed }};
+    const pending = {{ pending }};
+
+    // If completely empty, show placeholder ring
+    const hasData = (taken + missed + pending) > 0;
+    const dataValues = hasData ? [taken, missed, pending] : [1];
+    const dataLabels = hasData ? ['Taken', 'Missed', 'Pending'] : ['No Data'];
+    const bgColors = hasData ? ['#10b981', '#ef4444', '#f59e0b'] : ['#e5e7eb'];
+
+    new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+            labels: dataLabels,
+            datasets: [{
+                data: dataValues,
+                backgroundColor: bgColors,
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 12,
+                        font: { family: 'Inter', size: 12 }
+                    }
+                }
+            },
+            cutout: '70%'
+        }
+    });
+});
+</script>
+{% endblock %}

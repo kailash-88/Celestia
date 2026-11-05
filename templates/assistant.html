@@ -1,0 +1,421 @@
+{% extends "base.html" %}
+{% block title %}AI Health Assistant – MediMitra{% endblock %}
+
+{% block styles %}
+<style>
+.chat-container {
+    max-width: 860px;
+    margin: 0 auto;
+    background: rgba(11, 23, 40, 0.94);
+    border: 1px solid rgba(45, 212, 191, 0.22);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    height: 75vh;
+    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+}
+.chat-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(45, 212, 191, 0.16);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(15, 31, 54, 0.95);
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+}
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.msg {
+    max-width: 80%;
+    padding: 14px 18px;
+    border-radius: 14px;
+    line-height: 1.55;
+    font-size: 0.93rem;
+}
+.msg-bot {
+    align-self: flex-start;
+    background: rgba(18, 38, 64, 0.78);
+    color: #f1f5f9;
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-bottom-left-radius: 2px;
+}
+.msg-user {
+    align-self: flex-end;
+    background: linear-gradient(135deg, #0d9488, #0284c7);
+    color: #ffffff;
+    border-bottom-right-radius: 2px;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+}
+.chat-input-bar {
+    padding: 14px 20px;
+    border-top: 1px solid rgba(45, 212, 191, 0.16);
+    display: flex;
+    gap: 10px;
+    background: rgba(15, 31, 54, 0.95);
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
+}
+.voice-btn {
+    background: rgba(45, 212, 191, 0.15);
+    color: #2dd4bf;
+    border: 1px solid rgba(45, 212, 191, 0.3);
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 0 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.voice-btn.recording {
+    background: #fee2e2;
+    color: #dc2626;
+    animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+    100% { transform: scale(1); }
+}
+.escalate-box {
+    background: rgba(38, 20, 6, 0.94);
+    border: 1px dashed rgba(245, 158, 11, 0.5);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #fde68a;
+}
+</style>
+{% endblock %}
+
+{% block page_title %}AI Health Assistant{% endblock %}
+
+{% block content %}
+<div class="chat-container">
+
+    <!-- Header with Language Selector -->
+    <div class="chat-header">
+        <div style="display:flex; align-items:center; gap:10px;">
+            <div style="background:linear-gradient(135deg, #0d9488, #0284c7); color:white; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 12px rgba(45,212,191,0.35);">
+                <i data-lucide="bot" style="width:20px; height:20px;"></i>
+            </div>
+            <div>
+                <h3 style="margin:0; font-size:1.05rem; color:#f1f5f9;">MediMitra AI Clinical Assistant</h3>
+                <span style="font-size:0.75rem; color:#4ade80; font-weight:600;">● Online • Verified Medical Knowledgebase</span>
+            </div>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:8px;">
+            <label for="langSelect" style="font-size:0.85rem; color:#94a3b8; font-weight:600;">Language:</label>
+            <select id="langSelect" style="padding:6px 12px; border-radius:8px; border:1px solid rgba(56,189,248,0.35); font-size:0.85rem; background:rgba(8,20,36,0.9); color:#f1f5f9; font-weight:500;">
+                <option value="en">🇬🇧 English (India)</option>
+                <option value="hi" selected>🇮🇳 हिन्दी (Hindi)</option>
+                <option value="ta">🇮🇳 தமிழ் (Tamil)</option>
+                <option value="te">🇮🇳 తెలుగు (Telugu)</option>
+                <option value="bn">🇮🇳 বাংলা (Bengali)</option>
+                <option value="mr">🇮🇳 मराठी (Marathi)</option>
+                <option value="gu">🇮🇳 ગુજરાતી (Gujarati)</option>
+                <option value="kn">🇮🇳 ಕನ್ನಡ (Kannada)</option>
+                <option value="ml">🇮🇳 മലയാളം (Malayalam)</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Active Prescribed Medicines Pills -->
+    <div style="background:rgba(8,20,36,0.85); border-bottom:1px solid rgba(45,212,191,0.12); padding:8px 20px; font-size:0.8rem; color:#94a3b8; display:flex; align-items:center; gap:8px; overflow-x:auto;">
+        <strong style="color:#cbd5e1;">Your Active Medicines:</strong>
+        {% for m in medicines %}
+        <span style="background:rgba(45,212,191,0.12); border:1px solid rgba(45,212,191,0.3); color:#2dd4bf; padding:3px 10px; border-radius:12px; white-space:nowrap; cursor:pointer;" onclick="askPreset('Tell me about {{ m.name }} and when to take it')">
+            {{ m.name }}
+        </span>
+        {% endfor %}
+    </div>
+
+    <!-- Message Area -->
+    <div class="chat-messages" id="chatMessages">
+        <div class="msg msg-bot">
+            Hello {{ current_user.full_name.split()[0] }}! I am your MediMitra AI Health Assistant. You can ask me:
+            <ul style="margin:8px 0 0 18px; padding:0;">
+                <li>"Should I take Metformin before or after food?"</li>
+                <li>"What are the common side effects of Ecosprin?"</li>
+                <li>"What should I do if I missed my morning dose of Telma 40?"</li>
+            </ul>
+            <div style="margin-top:10px; font-size:0.8rem; color:#64748b;">
+                🎙️ You can also click the microphone to speak, or use the speaker icon to listen aloud.
+            </div>
+        </div>
+    </div>
+
+    <!-- Input Bar -->
+    <div class="chat-input-bar">
+        <button id="voiceBtn" class="voice-btn" title="Speak question with voice" onclick="toggleSpeechRecognition()">
+            <i data-lucide="mic" id="micIcon" style="width:20px; height:20px;"></i>
+        </button>
+        <input type="text" id="userInput" placeholder="Ask a medicine question (e.g., 'Take after food?')..." style="flex:1; padding:10px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:0.95rem;" onkeypress="if(event.key === 'Enter') sendMessage();">
+        <button class="btn btn-primary" onclick="sendMessage()" style="display:flex; align-items:center; gap:6px;">
+            <i data-lucide="send" style="width:16px; height:16px;"></i>
+            <span>Ask AI</span>
+        </button>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let lastQuestion = "";
+let recognition = null;
+let isRecording = false;
+
+// Web Speech API Voice Recognition setup
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onstart = function() {
+        isRecording = true;
+        document.getElementById('voiceBtn').classList.add('recording');
+    };
+
+    recognition.onresult = function(event) {
+        const text = event.results[0][0].transcript;
+        document.getElementById('userInput').value = text;
+        sendMessage();
+    };
+
+    recognition.onend = function() {
+        isRecording = false;
+        document.getElementById('voiceBtn').classList.remove('recording');
+    };
+
+    recognition.onerror = function() {
+        isRecording = false;
+        document.getElementById('voiceBtn').classList.remove('recording');
+    };
+}
+
+function toggleSpeechRecognition() {
+    if (!recognition) {
+        alert("Voice speech recognition is not supported in this browser. Please use Google Chrome or Edge.");
+        return;
+    }
+    if (isRecording) {
+        recognition.stop();
+    } else {
+        const lang = document.getElementById('langSelect').value;
+        const langMap = {
+            'en': 'en-IN', 'hi': 'hi-IN', 'ta': 'ta-IN', 'te': 'te-IN',
+            'bn': 'bn-IN', 'mr': 'mr-IN', 'gu': 'gu-IN', 'kn': 'kn-IN', 'ml': 'ml-IN'
+        };
+        recognition.lang = langMap[lang] || 'hi-IN';
+        recognition.start();
+    }
+}
+
+let currentAssistantAudio = null;
+
+function stopAssistantVoice() {
+    if (currentAssistantAudio) {
+        try {
+            currentAssistantAudio.pause();
+            currentAssistantAudio.currentTime = 0;
+        } catch(e) {}
+        currentAssistantAudio = null;
+    }
+    if (window.AndroidTTS && typeof window.AndroidTTS.stop === 'function') {
+        try { window.AndroidTTS.stop(); } catch(e) {}
+    }
+    if ('speechSynthesis' in window) {
+        try { window.speechSynthesis.cancel(); } catch(e) {}
+    }
+    document.querySelectorAll('.btn-read-aloud').forEach(b => {
+        b.innerHTML = '🔊 Read Aloud';
+        b.classList.remove('speaking');
+    });
+}
+
+function speakText(rawText, btnElement) {
+    if (btnElement && btnElement.classList.contains('speaking')) {
+        stopAssistantVoice();
+        return;
+    }
+
+    stopAssistantVoice();
+
+    // Clean text: strip markdown symbols, asterisks, brackets, and legal disclaimers from speech
+    let clean = rawText.replace(/[*#_•`]/g, ' ');
+    clean = clean.replace(/\(नोट:.*?\)/g, '');
+    clean = clean.replace(/\*\(Note:.*?\)\*/g, '');
+    clean = clean.replace(/Note:.*$/i, '');
+    clean = clean.replace(/\s+/g, ' ').trim();
+    if (!clean) return;
+
+    const lang = document.getElementById('langSelect').value || 'en';
+
+    if (btnElement) {
+        btnElement.classList.add('speaking');
+        btnElement.innerHTML = '⏹️ Stop Voice';
+    }
+
+    // 1. Android Native TTS Bridge if inside APK
+    if (window.AndroidTTS && typeof window.AndroidTTS.speak === 'function') {
+        try {
+            window.AndroidTTS.speak(clean, lang, 1.0);
+            return;
+        } catch(e) {
+            console.warn("AndroidTTS error, falling back to streaming audio", e);
+        }
+    }
+
+    // 2. Guaranteed Universal Streaming Audio
+    try {
+        const audioUrl = '/scanner/audio?lang=' + encodeURIComponent(lang) + '&text=' + encodeURIComponent(clean);
+        const audio = new Audio(audioUrl);
+        currentAssistantAudio = audio;
+
+        audio.onended = () => {
+            stopAssistantVoice();
+        };
+
+        audio.onerror = () => {
+            fallbackAssistantSpeech(clean, lang);
+        };
+
+        const p = audio.play();
+        if (p !== undefined) {
+            p.catch(() => fallbackAssistantSpeech(clean, lang));
+        }
+    } catch(err) {
+        fallbackAssistantSpeech(clean, lang);
+    }
+}
+
+function fallbackAssistantSpeech(clean, lang) {
+    if ('speechSynthesis' in window) {
+        try {
+            window.speechSynthesis.cancel();
+            const utt = new SpeechSynthesisUtterance(clean);
+            const locales = {
+                'en': 'en-IN', 'hi': 'hi-IN', 'ta': 'ta-IN', 'te': 'te-IN',
+                'bn': 'bn-IN', 'mr': 'mr-IN', 'gu': 'gu-IN', 'kn': 'kn-IN', 'ml': 'ml-IN'
+            };
+            utt.lang = locales[lang] || 'hi-IN';
+            utt.onend = () => stopAssistantVoice();
+            utt.onerror = () => stopAssistantVoice();
+            window.speechSynthesis.speak(utt);
+            return;
+        } catch(e) {}
+    }
+    stopAssistantVoice();
+}
+
+function askPreset(txt) {
+    document.getElementById('userInput').value = txt;
+    sendMessage();
+}
+
+async function sendMessage() {
+    const input = document.getElementById('userInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    lastQuestion = text;
+    input.value = "";
+
+    const msgContainer = document.getElementById('chatMessages');
+
+    // Add user message
+    const userDiv = document.createElement('div');
+    userDiv.className = 'msg msg-user';
+    userDiv.textContent = text;
+    msgContainer.appendChild(userDiv);
+    msgContainer.scrollTop = msgContainer.scrollHeight;
+
+    // Loading indicator
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'msg msg-bot';
+    loadingDiv.id = 'loadingMsg';
+    loadingDiv.innerHTML = '<em>Thinking with clinical knowledgebase...</em>';
+    msgContainer.appendChild(loadingDiv);
+    msgContainer.scrollTop = msgContainer.scrollHeight;
+
+    try {
+        const lang = document.getElementById('langSelect').value;
+        const res = await fetch("{{ url_for('assistant.ask') }}", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question: text, language: lang })
+        });
+        const data = await res.json();
+
+        loadingDiv.remove();
+
+        const botDiv = document.createElement('div');
+        botDiv.className = 'msg msg-bot';
+
+        let html = `<div>${data.answer.replace(/\n/g, '<br>')}</div>`;
+
+        // Read aloud button using clean spoken text
+        const spokenClean = (data.spoken_text || data.answer).replace(/[`"\\]/g, ' ');
+        html += `
+        <div style="margin-top:10px; display:flex; align-items:center; gap:8px;">
+            <button class="btn-read-aloud" onclick="speakText(\`${spokenClean}\`, this)" style="background:#e0f2fe; color:#0369a1; border:none; padding:5px 12px; border-radius:6px; font-size:0.82rem; cursor:pointer; font-weight:600; display:flex; align-items:center; gap:5px;">
+                🔊 Read Aloud
+            </button>
+        </div>`;
+
+        // Escalation Box to assigned doctor
+        if (data.can_escalate) {
+            html += `
+            <div class="escalate-box">
+                <span style="font-size:0.85rem; color:#92400e;">Need your doctor to verify this or prescribe adjustments?</span>
+                <button onclick="escalateToDoctor(\`${text.replace(/[`"\\]/g, '')}\`)" style="background:#d97706; color:white; border:none; padding:6px 12px; border-radius:6px; font-size:0.8rem; font-weight:700; cursor:pointer;">
+                    Escalate to My Doctor
+                </button>
+            </div>`;
+        }
+
+        botDiv.innerHTML = html;
+        msgContainer.appendChild(botDiv);
+        msgContainer.scrollTop = msgContainer.scrollHeight;
+
+        lucide.createIcons();
+
+    } catch (err) {
+        if (loadingDiv) loadingDiv.remove();
+        alert("Error connecting to AI service.");
+    }
+}
+
+async function escalateToDoctor(question) {
+    if (!confirm("Forward this question directly to your assigned doctor?")) return;
+
+    try {
+        const res = await fetch("{{ url_for('assistant.escalate') }}", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question: question, subject: "Question via AI Assistant: " + question.substring(0, 40) })
+        });
+        const data = await res.json();
+        alert(data.message || "Escalated to doctor!");
+        window.location.href = "{{ url_for('queries.patient_queries') }}";
+    } catch (e) {
+        alert("Failed to escalate question.");
+    }
+}
+</script>
+{% endblock %}

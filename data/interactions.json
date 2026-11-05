@@ -1,0 +1,30 @@
+[
+  {
+    "ingredient_a": "warfarin",
+    "ingredient_b": "aspirin",
+    "category": "interaction",
+    "explanation": "Concurrent use significantly increases bleeding and hemorrhage risk.",
+    "source": "Clinical Reference Guidelines v1"
+  },
+  {
+    "ingredient_a": "aspirin",
+    "ingredient_b": "ibuprofen",
+    "category": "interaction",
+    "explanation": "Concurrent NSAID use may diminish cardioprotective effects of low-dose aspirin and increase GI bleeding risk.",
+    "source": "FDA Safety Alerts"
+  },
+  {
+    "ingredient_a": "lisinopril",
+    "ingredient_b": "potassium",
+    "category": "interaction",
+    "explanation": "Co-administration may precipitate hyperkalemia (dangerously high blood potassium).",
+    "source": "Clinical Reference Guidelines v1"
+  },
+  {
+    "ingredient_a": "metformin",
+    "ingredient_b": "alcohol",
+    "category": "interaction",
+    "explanation": "Excessive alcohol intake with metformin may exacerbate risk of lactic acidosis.",
+    "source": "FDA Safety Alerts"
+  }
+]

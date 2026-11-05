@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+
+{% block title %}
+{% if action == 'add' %}Add Medicine – MediMitra
+{% elif action == 'edit' %}Edit Medicine – MediMitra
+{% elif action == 'detail' %}{{ medicine.name }} – MediMitra
+{% else %}Medicine Cabinet – MediMitra{% endif %}
+{% endblock %}
+
+{% block page_title %}
+{% if action == 'add' %}Add Medicine
+{% elif action == 'edit' %}Edit Medicine
+{% elif action == 'detail' %}{{ medicine.name }}
+{% else %}Medicine Cabinet{% endif %}
+{% endblock %}
+
+{% block content %}
+{% if action == 'add' or action == 'edit' %}
+<!-- Add / Edit Medicine Form -->
+<div class="card" style="max-width: 760px; margin: 0 auto;">
+    <div class="card-header">
+        <h3>
+            <i data-lucide="pill" style="width:20px;height:20px;margin-right:8px;color:var(--primary-600)"></i>
+            {% if action == 'add' %}Register New Medicine{% else %}Update Medicine Information{% endif %}
+        </h3>
+    </div>
+    <div class="card-body">
+        <form method="post" action="{% if action == 'add' %}{{ url_for('medicines.add') }}{% else %}{{ url_for('medicines.edit', medicine_id=medicine.id) }}{% endif %}">
+            <div class="form-row">
+                <div class="form-group" style="flex: 2;">
+                    <label for="name">Medicine Brand / Trade Name *</label>
+                    <input type="text" id="name" name="name" class="form-input" required 
+                           placeholder="e.g. Lipitor, Panadol, Amoxicillin" 
+                           value="{% if medicine %}{{ medicine.name }}{% endif %}">
+                </div>
+                <div class="form-group" style="flex: 2;">
+                    <label for="generic_name">Generic / Scientific Name</label>
+                    <input type="text" id="generic_name" name="generic_name" class="form-input" 
+                           placeholder="e.g. Atorvastatin, Paracetamol" 
+                           value="{% if medicine and medicine.generic_name %}{{ medicine.generic_name }}{% endif %}">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="dosage">Dosage / Strength</label>
+                    <input type="text" id="dosage" name="dosage" class="form-input" 
+                           placeholder="e.g. 500mg, 10ml, 1 puff" 
+                           value="{% if medicine and medicine.dosage %}{{ medicine.dosage }}{% endif %}">
+                </div>
+                <div class="form-group">
+                    <label for="form">Form</label>
+                    <select id="form" name="form" class="form-select">
+                        <option value="">Select form...</option>
+                        {% for f in ['Tablet', 'Capsule', 'Syrup', 'Injection', 'Inhaler', 'Ointment', 'Drops'] %}
+                        <option value="{{ f }}" {% if medicine and medicine.form == f %}selected{% endif %}>{{ f }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="quantity">Quantity / Units</label>
+                    <input type="number" id="quantity" name="quantity" class="form-input" min="0" 
+                           value="{% if medicine %}{{ medicine.quantity }}{% else %}30{% endif %}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="active_ingredients">Active Ingredients (comma-separated)</label>
+                <input type="text" id="active_ingredients" name="active_ingredients" class="form-input" 
+                       placeholder="e.g. Metformin hydrochloride, Aspirin, Warfarin" 
+                       value="{% if action == 'edit' %}{{ ingredients_str }}{% endif %}">
+                <small class="text-muted">Used for automatic interaction & duplicate checks.</small>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="expiry_date">Expiration Date</label>
+                    <input type="date" id="expiry_date" name="expiry_date" class="form-input" 
+                           value="{% if medicine and medicine.expiry_date %}{{ medicine.expiry_date }}{% endif %}">
+                </div>
+                <div class="form-group">
+                    <label for="manufacturer">Manufacturer / Brand</label>
+                    <input type="text" id="manufacturer" name="manufacturer" class="form-input" 
+                           placeholder="e.g. Pfizer, Sun Pharma, Cipla" 
+                           value="{% if medicine and medicine.manufacturer %}{{ medicine.manufacturer }}{% endif %}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="purpose">Purpose / Indication</label>
+                <input type="text" id="purpose" name="purpose" class="form-input" 
+                       placeholder="e.g. Blood pressure management, Pain relief" 
+                       value="{% if medicine and medicine.purpose %}{{ medicine.purpose }}{% endif %}">
+            </div>
+
+            <div class="form-group">
+                <label for="warnings">Special Precautions / Doctor Warnings</label>
+                <textarea id="warnings" name="warnings" class="form-input" rows="2" 
+                          placeholder="e.g. Take with food. Avoid alcohol. Do not crush.">{% if medicine and medicine.warnings %}{{ medicine.warnings }}{% endif %}</textarea>
+            </div>
+
+            <div style="display:flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+                <a href="{{ url_for('medicines.index') }}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i data-lucide="check"></i>
+                    <span>{% if action == 'add' %}Save Medicine{% else %}Update Details{% endif %}</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% elif action == 'detail' %}
+<!-- Medicine Detail View -->
+<div class="card" style="max-width: 820px; margin: 0 auto;">
+    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+            <h3>{{ medicine.name }}</h3>
+            {% if medicine.generic_name %}
+            <p class="text-muted" style="margin-top: 2px;">Generic: <strong>{{ medicine.generic_name }}</strong></p>
+            {% endif %}
+        </div>
+        <div style="display:flex; gap: 8px;">
+            <a href="{{ url_for('medicines.edit', medicine_id=medicine.id) }}" class="btn btn-sm btn-outline">
+                <i data-lucide="edit-3"></i> Edit
+            </a>
+            <form method="post" action="{{ url_for('medicines.delete', medicine_id=medicine.id) }}" onsubmit="return confirm('Are you sure you want to delete this medicine? Associated schedules will also be removed.');" style="display:inline;">
+                <button type="submit" class="btn btn-sm btn-danger">
+                    <i data-lucide="trash-2"></i> Delete
+                </button>
+            </form>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 24px;">
+            <div class="stat-card">
+                <div class="stat-info">
+                    <span class="stat-label">Dosage & Form</span>
+                    <span class="stat-value" style="font-size: 1.1rem;">{{ medicine.dosage or 'Standard' }}</span>
+                    <span class="stat-sub">{{ medicine.form or 'Medication' }}</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <span class="stat-label">Quantity in Stock</span>
+                    <span class="stat-value" style="font-size: 1.1rem;">{{ medicine.quantity }} units</span>
+                    <span class="stat-sub">Tracked balance</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <span class="stat-label">Expiry Date</span>
+                    <span class="stat-value" style="font-size: 1.1rem;">{{ medicine.expiry_date or 'Not set' }}</span>
+                    <span class="stat-sub">Verification</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <span class="stat-label">Verification Source</span>
+                    <span class="stat-value" style="font-size: 1.1rem; text-transform: capitalize;">{{ medicine.source }}</span>
+                    <span class="stat-sub">{% if medicine.verified %}<span class="tag tag-success">Verified</span>{% else %}<span class="tag tag-warning">Unconfirmed</span>{% endif %}</span>
+                </div>
+            </div>
+        </div>
+
+        {% if ingredients %}
+        <div style="margin-bottom: 20px;">
+            <h4 style="font-size: 0.95rem; margin-bottom: 8px;">Active Ingredients</h4>
+            <div style="display:flex; flex-wrap:wrap; gap: 8px;">
+                {% for ing in ingredients %}
+                <span class="tag tag-info" style="font-size: 0.85rem; padding: 4px 10px;">{{ ing }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if medicine.purpose %}
+        <div style="margin-bottom: 20px;">
+            <h4 style="font-size: 0.95rem; margin-bottom: 4px;">Primary Indication / Purpose</h4>
+            <p>{{ medicine.purpose }}</p>
+        </div>
+        {% endif %}
+
+        {% if medicine.warnings %}
+        <div style="margin-bottom: 20px; padding: 12px 16px; background: var(--warning-light); border-radius: var(--radius-md); border-left: 4px solid var(--warning);">
+            <h4 style="color: #92400e; font-size: 0.95rem; margin-bottom: 4px; display:flex; align-items:center; gap:6px;">
+                <i data-lucide="alert-triangle" style="width:16px;height:16px;"></i> Warnings & Instructions
+            </h4>
+            <p style="color: #78350f; font-size: 0.9rem;">{{ medicine.warnings }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Associated Active Schedules -->
+        <div style="margin-top: 28px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+                <h4 style="font-size: 1rem;">Linked Dosage Schedules</h4>
+                <a href="{{ url_for('schedule.index') }}" class="btn btn-sm btn-outline">+ Manage in Schedule</a>
+            </div>
+            {% if schedules %}
+            <div class="dose-list">
+                {% for s in schedules %}
+                <div class="dose-item">
+                    <span class="dose-time">{{ s.scheduled_time }} ({{ s.time_of_day|capitalize }})</span>
+                    <div class="dose-info">
+                        <div class="dose-medicine">{{ s.dosage_amount or medicine.dosage or '1 dose' }}</div>
+                        <div class="dose-details">{{ s.instructions or 'Standard administration' }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted" style="font-size: 0.9rem;">No active schedules configured for this medicine yet.</p>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card-footer" style="display:flex; justify-content: flex-end;">
+        <a href="{{ url_for('medicines.index') }}" class="btn btn-secondary">Back to Cabinet</a>
+    </div>
+</div>
+
+{% else %}
+<!-- Medicine Cabinet Index -->
+<div class="quick-actions" style="justify-content: space-between; align-items: center;">
+    <form method="get" action="{{ url_for('medicines.index') }}" style="display:flex; gap: 8px; flex: 1; max-width: 400px;">
+        <input type="text" name="q" value="{{ search_query }}" placeholder="Search medicines by name or purpose..." class="form-input" style="padding: 8px 14px; font-size: 0.9rem;">
+        <button type="submit" class="btn btn-secondary btn-sm">Search</button>
+        {% if search_query %}
+        <a href="{{ url_for('medicines.index') }}" class="btn btn-outline btn-sm">Clear</a>
+        {% endif %}
+    </form>
+
+    <div style="display:flex; gap: 10px;">
+        <a href="{{ url_for('scanner.scan') }}" class="quick-action-btn">
+            <i data-lucide="scan-line"></i>
+            <span>Scan Medicine</span>
+        </a>
+        <a href="{{ url_for('medicines.add') }}" class="btn btn-primary">
+            <i data-lucide="plus-circle"></i>
+            <span>Add Medicine</span>
+        </a>
+    </div>
+</div>
+
+{% if medicines %}
+<div class="card">
+    <div class="card-header">
+        <h3>My Medicines ({{ medicines|length }})</h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1.5px solid var(--gray-200); background: var(--gray-50); text-align: left;">
+                    <th style="padding: 12px 16px;">Medicine</th>
+                    <th style="padding: 12px 16px;">Dosage / Form</th>
+                    <th style="padding: 12px 16px;">Purpose</th>
+                    <th style="padding: 12px 16px;">Expiry</th>
+                    <th style="padding: 12px 16px;">Status</th>
+                    <th style="padding: 12px 16px; text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for med in medicines %}
+                <tr style="border-bottom: 1px solid var(--gray-100);">
+                    <td style="padding: 14px 16px;">
+                        <a href="{{ url_for('medicines.detail', medicine_id=med.id) }}" style="font-weight: 600; color: var(--primary-700); text-decoration: none;">
+                            {{ med.name }}
+                        </a>
+                        {% if med.generic_name %}
+                        <div class="text-muted" style="font-size: 0.8rem;">{{ med.generic_name }}</div>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 14px 16px;">
+                        <div>{{ med.dosage or '–' }}</div>
+                        <span class="tag tag-neutral" style="font-size: 0.75rem;">{{ med.form or 'Med' }}</span>
+                    </td>
+                    <td style="padding: 14px 16px; font-size: 0.85rem; color: var(--gray-600);">
+                        {{ med.purpose or 'General maintenance' }}
+                    </td>
+                    <td style="padding: 14px 16px; font-size: 0.85rem;">
+                        {{ med.expiry_date or 'Not recorded' }}
+                    </td>
+                    <td style="padding: 14px 16px;">
+                        {% if med.verified %}
+                        <span class="tag tag-success" style="font-size: 0.75rem;">Verified</span>
+                        {% else %}
+                        <span class="tag tag-warning" style="font-size: 0.75rem;">Unverified</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 14px 16px; text-align: right;">
+                        <a href="{{ url_for('medicines.detail', medicine_id=med.id) }}" class="btn btn-sm btn-outline" style="margin-right: 4px;">View</a>
+                        <a href="{{ url_for('medicines.edit', medicine_id=med.id) }}" class="btn btn-sm btn-secondary">Edit</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body">
+        <div class="empty-state">
+            <i data-lucide="pill"></i>
+            <h4>No Medicines Registered Yet</h4>
+            <p>Add your prescription drugs, supplements, and OTC medications manually or scan packaging with the smart scanner.</p>
+            <div style="display:flex; gap: 12px; margin-top: 16px;">
+                <a href="{{ url_for('medicines.add') }}" class="btn btn-primary">Add Manually</a>
+                <a href="{{ url_for('scanner.scan') }}" class="btn btn-outline">Scan Packaging</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/medicines.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,42 @@
+# Environment & Secrets
+.env
+*.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual Environments
+.venv/
+.venv314/
+venv/
+ENV/
+env/
+
+# Database
+*.db
+*.sqlite3
+
+# Uploaded Files
+uploads/*
+!uploads/.gitkeep
+
+# Android Build & Local Paths
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+*.iml
+.gradle/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
