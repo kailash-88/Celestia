@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% block title %}{{ t('scanner_title') }} – MediMitra{% endblock %}
 
+{% block head_extra %}
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+{% endblock %}
+
 {% block styles %}
 <style>
 .scanner-page-wrap {
@@ -337,9 +341,46 @@
 
     </div>
 
+    <!-- 215+ Indian Tablet Quick Search & Instant Selection Card -->
+    <div style="background: rgba(14, 30, 52, 0.95); border: 1.5px solid rgba(56, 189, 248, 0.35); border-radius: 18px; padding: 20px 24px; position: relative; box-shadow: 0 8px 30px rgba(0,0,0,0.35);">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <i data-lucide="search" style="width: 20px; height: 20px; color: #38bdf8;"></i>
+                <h4 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #f8fafc;">
+                    🔍 Search Any Tablet / 215+ Indian Medicines (दवा खोजें / மருந்து தேடல்)
+                </h4>
+            </div>
+            <span style="font-size: 0.8rem; color: #94a3b8; font-weight: 600;">Instant Clinical Facts</span>
+        </div>
+
+        <div style="position: relative;">
+            <input type="text" id="tabletSearchInput" 
+                   placeholder="Type tablet name (e.g., Dolo, Pan-D, Calpol, Saridon, Telma, Azithral, Combiflam...)" 
+                   autocomplete="off"
+                   oninput="onTabletSearchInput(this.value)"
+                   style="width: 100%; padding: 12px 18px; border-radius: 12px; background: rgba(8, 20, 36, 0.95); border: 1.5px solid rgba(56, 189, 248, 0.4); color: #ffffff; font-size: 0.98rem; outline: none;">
+            
+            <div id="tabletSuggestionsBox" style="display: none; position: absolute; left: 0; right: 0; top: calc(100% + 6px); background: #0c1a2e; border: 1.5px solid rgba(56, 189, 248, 0.45); border-radius: 12px; max-height: 260px; overflow-y: auto; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.7);">
+            </div>
+        </div>
+
+        <!-- Quick 1-Tap Popular Tablet Pills -->
+        <div style="margin-top: 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span style="font-size: 0.78rem; font-weight: 750; color: #94a3b8; text-transform: uppercase;">Quick Tap:</span>
+            {% for pop in ['Dolo 650', 'Pan-D', 'Calpol 650', 'Saridon', 'Combiflam', 'Telma 40', 'Azithral 500', 'Cetirizine 10', 'Atorva 10', 'Augmentin 625'] %}
+            <button type="button" onclick="selectTabletDirect('{{ pop }}')" 
+                    style="background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.35); color: #38bdf8; padding: 5px 12px; border-radius: 9999px; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: all 0.15s ease;">
+                {{ pop }}
+            </button>
+            {% endfor %}
+        </div>
+    </div>
+
     <!-- Hidden Submission Form and Canvas -->
     <form id="hiddenScanForm" method="POST" enctype="multipart/form-data" style="display: none;">
         <input type="file" name="image" id="hiddenImageInput">
+        <input type="hidden" name="client_ocr_text" id="clientOcrTextInput">
+        <input type="hidden" name="selected_tablet" id="selectedTabletInput">
     </form>
     <canvas id="hiddenCanvas" style="display: none;"></canvas>
 
@@ -347,6 +388,7 @@
     <div id="scanLoadingModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; gap: 16px;">
         <div style="width: 60px; height: 60px; border: 4px solid rgba(56, 189, 248, 0.2); border-top-color: #38bdf8; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
         <h3 style="color: #f1f5f9; margin: 0; font-size: 1.2rem;">{{ t('analyzing_pill') }}</h3>
+        <p style="color: #94a3b8; margin: 0; font-size: 0.88rem;">Running optical character recognition &amp; clinical matching...</p>
     </div>
     <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
 
@@ -473,7 +515,6 @@ function startLiveCamera() {
         return;
     }
 
-    // Stop existing stream if running
     if (currentStream) {
         currentStream.getTracks().forEach(track => track.stop());
     }
@@ -529,29 +570,94 @@ function captureLivePhoto() {
     canvas.toBlob(blob => {
         if (!blob) return;
         const file = new File([blob], "tablet_scan.jpg", { type: "image/jpeg" });
-        submitFile(file);
+        submitFileWithClientOCR(file);
     }, 'image/jpeg', 0.92);
 }
 
 function uploadDirectFile(input) {
     if (input.files && input.files[0]) {
-        submitFile(input.files[0]);
+        submitFileWithClientOCR(input.files[0]);
     }
 }
 
-function submitFile(file) {
+async function submitFileWithClientOCR(file) {
     document.getElementById('scanLoadingModal').style.display = 'flex';
     const form = document.getElementById('hiddenScanForm');
     const hiddenInput = document.getElementById('hiddenImageInput');
+    const clientOcrInput = document.getElementById('clientOcrTextInput');
 
     const dt = new DataTransfer();
     dt.items.add(file);
     hiddenInput.files = dt.files;
+
+    // Run client-side Tesseract.js with 2.5s maximum timeout
+    if (window.Tesseract) {
+        try {
+            const ocrPromise = Tesseract.recognize(file, 'eng');
+            const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(null), 2500));
+            const res = await Promise.race([ocrPromise, timeoutPromise]);
+            if (res && res.data && res.data.text) {
+                clientOcrInput.value = res.data.text.trim();
+            }
+        } catch(e) {
+            console.log("Client OCR notice:", e);
+        }
+    }
+
     form.submit();
 }
 
 // ==============================================================
-// 2. Multilingual Voice Audio Player
+// 2. Instant Tablet Search & Quick Selection
+// ==============================================================
+let searchDebounceTimer = null;
+function onTabletSearchInput(val) {
+    clearTimeout(searchDebounceTimer);
+    const box = document.getElementById('tabletSuggestionsBox');
+    if (!val || val.trim().length < 2) {
+        box.style.display = 'none';
+        return;
+    }
+    searchDebounceTimer = setTimeout(() => {
+        fetch('/scanner/api/suggest?q=' + encodeURIComponent(val.trim()))
+            .then(res => res.json())
+            .then(items => {
+                if (!items || items.length === 0) {
+                    box.style.display = 'none';
+                    return;
+                }
+                box.innerHTML = items.map(m => `
+                    <div onclick="selectTabletDirect('${m.name}')" style="padding: 10px 16px; border-bottom: 1px solid rgba(56, 189, 248, 0.15); cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.15s ease;" onmouseover="this.style.background='rgba(56, 189, 248, 0.15)'" onmouseout="this.style.background='transparent'">
+                        <div>
+                            <strong style="color: #f8fafc; font-size: 0.94rem;">${m.name}</strong>
+                            <div style="color: #94a3b8; font-size: 0.8rem;">${m.generic_name || ''}</div>
+                        </div>
+                        <span style="background: rgba(45, 212, 191, 0.15); color: #2dd4bf; border: 1px solid rgba(45, 212, 191, 0.3); border-radius: 9999px; padding: 2px 8px; font-size: 0.75rem; font-weight: 700;">${m.standard_strength || m.dosage_form || 'Tablet'}</span>
+                    </div>
+                `).join('');
+                box.style.display = 'block';
+            })
+            .catch(() => { box.style.display = 'none'; });
+    }, 200);
+}
+
+function selectTabletDirect(name) {
+    document.getElementById('scanLoadingModal').style.display = 'flex';
+    document.getElementById('selectedTabletInput').value = name;
+    document.getElementById('hiddenScanForm').submit();
+}
+
+// Close suggestions box on clicking outside
+document.addEventListener('click', (e) => {
+    const box = document.getElementById('tabletSuggestionsBox');
+    const input = document.getElementById('tabletSearchInput');
+    if (box && input && !box.contains(e.target) && e.target !== input) {
+        box.style.display = 'none';
+    }
+});
+
+// ==============================================================
+// 3. Multilingual Voice Audio Player
 // ==============================================================
 {% if result and result.voice_scripts_json %}
 const voiceScripts = {{ result.voice_scripts_json|safe }};
@@ -584,7 +690,6 @@ function playVoiceAudio() {
     };
 
     currentAudio.onerror = () => {
-        // Fallback to Web Speech API
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
             const u = new SpeechSynthesisUtterance(langData.text);
@@ -622,7 +727,6 @@ document.addEventListener('DOMContentLoaded', () => {
     startLiveCamera();
     {% if result and result.voice_scripts_json %}
     initVoice();
-    // Scroll smoothly to results
     const results = document.getElementById('resultsSection');
     if (results) {
         results.scrollIntoView({ behavior: 'smooth' });

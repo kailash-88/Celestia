@@ -39,11 +39,16 @@ def _allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in current_app.config["ALLOWED_EXTENSIONS"]
 
 
-def _analyze_image(image_path):
+def _analyze_image(image_path, hint_text=""):
     """Run local OCR/CV and optional vision AI for an uploaded image."""
-    ocr_result = extract_prescription_data(image_path, current_app.config["TESSERACT_CMD"])
-    fields = dict(ocr_result["fields"])
-    analysis = extract_medicine_info(ocr_result["raw_text"], image_path=image_path)
+    raw_text = hint_text.strip()
+    fields = {}
+    if not raw_text:
+        ocr_result = extract_prescription_data(image_path, current_app.config["TESSERACT_CMD"])
+        raw_text = ocr_result["raw_text"]
+        fields = dict(ocr_result["fields"])
+
+    analysis = extract_medicine_info(raw_text, image_path=image_path)
     facts = analysis.get("extracted_facts", {})
     for target, source in {
         "name": "name", "generic_name": "active_ingredient", "active_ingredient": "active_ingredient",
@@ -73,7 +78,23 @@ def _analyze_image(image_path):
     fields["uncertain_fields"] = analysis.get("uncertain_fields", [])
     fields["analysis_source"] = analysis.get("source", "smart_nlp")
     fields["analysis_notice"] = analysis.get("notice", "Check every suggestion against the uploaded image.")
-    return ocr_result["raw_text"], fields
+    return raw_text, fields
+
+
+@scanner_bp.route("/api/suggest", methods=["GET"])
+def suggest_tablets():
+    """Autocomplete suggestions for Indian medicines."""
+    q = request.args.get("q", "").strip().lower()
+    if not q or len(q) < 2:
+        rows = query_db(
+            "SELECT name, generic_name, standard_strength, dosage_form FROM medicine_database ORDER BY name ASC LIMIT 20"
+        )
+    else:
+        rows = query_db(
+            "SELECT name, generic_name, standard_strength, dosage_form FROM medicine_database WHERE LOWER(name) LIKE ? OR LOWER(generic_name) LIKE ? ORDER BY name ASC LIMIT 20",
+            [f"{q}%", f"%{q}%"]
+        )
+    return jsonify([dict(r) for r in rows])
 
 
 # ==============================================================
@@ -83,70 +104,140 @@ def _analyze_image(image_path):
 @role_required('patient')
 def medicine_scan():
     """Scan medicine strip using camera or image upload to extract details, usage, food timing, and side effects."""
+    import re
     user_id = session["user_id"]
     result = None
 
     if request.method == "POST":
+        selected_tablet = request.form.get("selected_tablet", "").strip()
+        client_ocr = request.form.get("client_ocr_text", "").strip()
         image = request.files.get("image")
-        if not image or not image.filename:
-            flash("Choose or take a photo of a medicine strip/box.", "error")
-            return render_template("medicine_scanner.html")
-        if not _allowed_file(image.filename):
-            flash("Unsupported image format. Please use JPG, PNG or WEBP.", "error")
-            return render_template("medicine_scanner.html")
+        image_path = None
+        relative_path = None
+        raw_ocr = ""
+        fields = {}
+        db_match = None
 
-        filename = f"strip_{uuid.uuid4().hex[:8]}_{secure_filename(image.filename)}"
-        image_path = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
-        image.save(image_path)
-        relative_path = os.path.relpath(image_path, current_app.root_path)
-
-        raw_ocr, fields = _analyze_image(image_path)
-        med_name = fields.get("name", "").strip() or "Identified Medicine"
-        generic_name = fields.get("generic_name", "").strip() or fields.get("active_ingredient", "").strip()
-        dosage = fields.get("dosage", "").strip() or "Standard dose"
-        form = fields.get("form", "").strip() or "Tablet"
-        mfg_date = fields.get("manufacturing_date", "").strip()
-        exp_date = fields.get("expiry_date", "").strip()
-
-        # Look up verified knowledgebase with progressive search
-        first_token = med_name.split()[0].lower() if med_name else ""
-        db_match = query_db(
-            "SELECT * FROM medicine_database WHERE LOWER(name) = ? LIMIT 1",
-            [med_name.lower()], one=True
-        )
-        if not db_match and first_token and len(first_token) >= 3:
+        # 1. Handle direct tablet selection from instant search/picker
+        if selected_tablet:
             db_match = query_db(
-                "SELECT * FROM medicine_database WHERE LOWER(name) LIKE ? LIMIT 1",
-                [f"{first_token}%"], one=True
+                "SELECT * FROM medicine_database WHERE LOWER(name) = ? OR LOWER(name) LIKE ? LIMIT 1",
+                [selected_tablet.lower(), f"{selected_tablet.lower()}%"], one=True
             )
-        if not db_match and generic_name:
-            gen_token = generic_name.split()[0].lower()
-            if len(gen_token) >= 3:
+            if not db_match:
                 db_match = query_db(
-                    "SELECT * FROM medicine_database WHERE LOWER(generic_name) LIKE ? LIMIT 1",
-                    [f"%{gen_token}%"], one=True
+                    "SELECT * FROM medicine_database WHERE LOWER(name) LIKE ? OR LOWER(generic_name) LIKE ? LIMIT 1",
+                    [f"%{selected_tablet.lower()}%", f"%{selected_tablet.lower()}%"], one=True
                 )
+            if db_match:
+                med_name = db_match["name"]
+                generic_name = db_match["generic_name"]
+                dosage = db_match["standard_strength"] or "Standard dose"
+                form = db_match["dosage_form"] or "Tablet"
+                mfg_date = ""
+                exp_date = "Verified"
+                before_after_food = db_match["before_after_food"] or "Take after meals with water."
+                common_uses = db_match["common_uses"] or "Therapeutic medication."
+                side_effects = db_match["side_effects"] or "Mild stomach discomfort."
+                warnings = db_match["warnings"] or "Take as directed by doctor. Do not exceed prescribed dose."
+                raw_ocr = f"Selected tablet: {med_name} ({generic_name})"
+                fields = {
+                    "name": med_name, "generic_name": generic_name, "dosage": dosage, "form": form,
+                    "before_after_food": before_after_food, "common_uses": common_uses, "warnings": warnings,
+                    "analysis_source": "verified_database", "analysis_notice": "Verified clinical Indian medicine entry."
+                }
+            else:
+                flash(f"Could not find '{selected_tablet}' in database.", "warning")
+                return render_template("medicine_scanner.html")
 
-        before_after_food = (
-            (db_match["before_after_food"] if db_match and db_match["before_after_food"] else None)
-            or fields.get("before_after_food")
-            or "Take after meals with water."
-        )
-        common_uses = (
-            (db_match["common_uses"] if db_match and db_match["common_uses"] else None)
-            or fields.get("purpose")
-            or "Therapeutic medication."
-        )
-        side_effects = (
-            (db_match["side_effects"] if db_match and db_match["side_effects"] else None)
-            or fields.get("side_effects")
-            or "Mild nausea, headache, stomach upset."
-        )
-        warnings = (
-            (db_match["warnings"] if db_match and db_match["warnings"] else None)
-            or fields.get("warnings")
-            or "Take as directed by doctor. Do not exceed prescribed dose."
-        )
+        # 2. Handle camera or uploaded image
+        elif image and image.filename:
+            if not _allowed_file(image.filename):
+                flash("Unsupported image format. Please use JPG, PNG or WEBP.", "error")
+                return render_template("medicine_scanner.html")
+
+            filename = f"strip_{uuid.uuid4().hex[:8]}_{secure_filename(image.filename)}"
+            image_path = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
+            image.save(image_path)
+            relative_path = os.path.relpath(image_path, current_app.root_path)
+
+            raw_ocr, fields = _analyze_image(image_path, hint_text=client_ocr)
+
+            # If server OCR is empty or sparse, use client OCR from browser Tesseract.js
+            if (not raw_ocr or len(raw_ocr.strip()) < 4) and client_ocr:
+                raw_ocr = client_ocr
+                analysis = extract_medicine_info(client_ocr, image_path=image_path)
+                facts = analysis.get("extracted_facts", {})
+                for target, source in {
+                    "name": "name", "generic_name": "active_ingredient", "active_ingredient": "active_ingredient",
+                    "manufacturer": "manufacturer", "dosage": "strength", "form": "form", "purpose": "purpose",
+                    "before_after_food": "before_after_food", "side_effects": "side_effects", "warnings": "warnings",
+                }.items():
+                    if facts.get(source):
+                        fields[target] = facts[source]
+
+            med_name = fields.get("name", "").strip() or "Identified Medicine"
+            generic_name = fields.get("generic_name", "").strip() or fields.get("active_ingredient", "").strip()
+            dosage = fields.get("dosage", "").strip() or "Standard dose"
+            form = fields.get("form", "").strip() or "Tablet"
+            mfg_date = fields.get("manufacturing_date", "").strip()
+            exp_date = fields.get("expiry_date", "").strip()
+
+            # Progressive Search in 215+ Indian Medicine Database
+            if med_name and med_name not in ("Unidentified Medicine", "Identified Medicine"):
+                db_match = query_db(
+                    "SELECT * FROM medicine_database WHERE LOWER(name) = ? LIMIT 1",
+                    [med_name.lower()], one=True
+                )
+                if not db_match:
+                    first_token = med_name.split()[0].lower()
+                    if len(first_token) >= 3:
+                        db_match = query_db(
+                            "SELECT * FROM medicine_database WHERE LOWER(name) LIKE ? LIMIT 1",
+                            [f"{first_token}%"], one=True
+                        )
+
+            # If still unmatched or unidentified, scan all words in raw_ocr or client_ocr against DB
+            combined_text = f"{raw_ocr} {client_ocr}".strip()
+            if not db_match and combined_text:
+                tokens = [t.strip().lower() for t in re.split(r'[^a-zA-Z0-9]', combined_text) if len(t.strip()) >= 3 and not t.isdigit()]
+                for tok in tokens:
+                    if tok in ("tablet", "tablets", "capsule", "syrup", "strip", "pack", "mfg", "exp", "batch", "india"):
+                        continue
+                    found = query_db(
+                        "SELECT * FROM medicine_database WHERE LOWER(name) LIKE ? OR LOWER(generic_name) LIKE ? LIMIT 1",
+                        [f"%{tok}%", f"%{tok}%"], one=True
+                    )
+                    if found:
+                        db_match = found
+                        med_name = found["name"]
+                        generic_name = found["generic_name"]
+                        dosage = found["standard_strength"] or dosage
+                        break
+
+            before_after_food = (
+                (db_match["before_after_food"] if db_match and db_match["before_after_food"] else None)
+                or fields.get("before_after_food")
+                or "Take after meals with water."
+            )
+            common_uses = (
+                (db_match["common_uses"] if db_match and db_match["common_uses"] else None)
+                or fields.get("purpose")
+                or "Therapeutic medication."
+            )
+            side_effects = (
+                (db_match["side_effects"] if db_match and db_match["side_effects"] else None)
+                or fields.get("side_effects")
+                or "Mild nausea, headache, stomach upset."
+            )
+            warnings = (
+                (db_match["warnings"] if db_match and db_match["warnings"] else None)
+                or fields.get("warnings")
+                or "Take as directed by doctor. Do not exceed prescribed dose."
+            )
+        else:
+            flash("Please choose or capture a photo of a medicine strip/box.", "error")
+            return render_template("medicine_scanner.html")
 
         # Check safety against patient's active medicines
         patient_meds = query_db("SELECT name, active_ingredients FROM medicines WHERE user_id = ?", [user_id])
