@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">MediMitra</string>
-    <string name="default_server_url">http://10.67.85.19:5000</string>
-    <string name="emulator_server_url">http://10.0.2.2:5000</string>
+    <string name="default_server_url">https://celestia-hunk.onrender.com</string>
+    <string name="emulator_server_url">https://celestia-hunk.onrender.com</string>
     <string name="error_loading">Could not connect to MediMitra</string>
     <string name="error_description">Please make sure the MediMitra server is running and your device is connected to the same network or internet.</string>
     <string name="retry">Retry</string>
