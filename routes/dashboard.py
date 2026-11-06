@@ -69,6 +69,9 @@ def index():
 
     # Patient profile & emergency contact
     profile = query_db("SELECT * FROM patient_profiles WHERE user_id = ?", [user_id], one=True)
+    if not profile:
+        execute_db("INSERT OR IGNORE INTO patient_profiles (user_id) VALUES (?)", [user_id])
+        profile = query_db("SELECT * FROM patient_profiles WHERE user_id = ?", [user_id], one=True)
 
     # Caregiver link status
     caregiver = query_db(

@@ -64,7 +64,11 @@ def init_db():
         # Seed comprehensive Indian medicine database if needed
         cur = conn.execute("SELECT COUNT(*) FROM medicine_database")
         med_count = cur.fetchone()[0]
-        if med_count < 170:
+        needs_seed = (med_count < 170)
+        conn.close()
+        conn = None
+
+        if needs_seed:
             try:
                 from database.seed_indian_medicines import seed_indian_medicines
                 seed_indian_medicines(get_db_path())
@@ -74,9 +78,10 @@ def init_db():
         print("[DB] Database initialized successfully.")
     except Exception as e:
         print(f"[DB] Error initializing database: {e}")
-        raise
+        # Non-fatal error during init so server never fails to boot
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 
 def query_db(query, args=(), one=False):

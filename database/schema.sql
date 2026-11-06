@@ -7,8 +7,10 @@ CREATE TABLE IF NOT EXISTS users (
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     full_name TEXT NOT NULL,
-    role TEXT NOT NULL DEFAULT 'patient',  -- 'patient' or 'caregiver'
+    role TEXT NOT NULL DEFAULT 'patient',  -- 'patient', 'doctor', 'caregiver', 'admin', 'pharmacist'
     phone TEXT,
+    language TEXT DEFAULT 'en',
+    auto_camera INTEGER DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

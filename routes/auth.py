@@ -157,7 +157,9 @@ def register():
             'INSERT INTO users (username, email, password_hash, full_name, role, language, auto_camera) VALUES (?, ?, ?, ?, ?, ?, 1)',
             [username, email, password_hash, full_name, role, language]
         )
-        if role == 'doctor':
+        if role == 'patient':
+            execute_db('INSERT OR IGNORE INTO patient_profiles (user_id) VALUES (?)', [account_id])
+        elif role == 'doctor':
             execute_db(
                 'INSERT INTO doctor_profiles (user_id, specialty, license_number, qualifications) VALUES (?, ?, ?, ?)',
                 [account_id, specialty, license_number, qualifications or None]

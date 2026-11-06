@@ -85,6 +85,21 @@ def create_app(config_class=None):
         from routes.auth import get_current_user
         return dict(current_user=get_current_user())
 
+    # --- Global Exception & Error Handler ---
+    @app.errorhandler(500)
+    def handle_500_error(e):
+        import traceback
+        tb = traceback.format_exc()
+        app.logger.error(f"[SERVER 500 ERROR] {tb}")
+        return f"<div style='padding:24px; font-family:sans-serif;'><h2>Internal Server Error (500)</h2><p>Details below:</p><pre style='background:#f1f5f9; padding:16px; border-radius:8px; border:1px solid #cbd5e1; overflow:auto;'>{tb}</pre></div>", 500
+
+    @app.errorhandler(Exception)
+    def handle_unhandled_exception(e):
+        import traceback
+        tb = traceback.format_exc()
+        app.logger.error(f"[UNHANDLED EXCEPTION] {tb}")
+        return f"<div style='padding:24px; font-family:sans-serif;'><h2>Server Exception</h2><p>Details below:</p><pre style='background:#f1f5f9; padding:16px; border-radius:8px; border:1px solid #cbd5e1; overflow:auto;'>{tb}</pre></div>", 500
+
     return app
 
 
