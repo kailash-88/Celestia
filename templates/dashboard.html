@@ -223,13 +223,13 @@
                 <span style="font-weight: 600;">Voice &amp; App Language:</span>
             </div>
             <div style="display: flex; gap: 8px;">
-                <a href="{{ url_for('auth.set_language', lang='en') }}" class="btn btn-sm" style="padding: 4px 12px; font-size: 0.82rem; font-weight: 700; border-radius: 6px; text-decoration: none; border: 1px solid {% if session.get('language', 'en') == 'en' %}#38bdf8{% else %}rgba(148,163,184,0.3){% endif %}; background: {% if session.get('language', 'en') == 'en' %}rgba(56,189,248,0.25){% else %}rgba(15,23,42,0.6){% endif %}; color: {% if session.get('language', 'en') == 'en' %}#38bdf8{% else %}#cbd5e1{% endif %};">
+                <a href="/set-language/en" class="btn btn-sm" style="padding: 4px 12px; font-size: 0.82rem; font-weight: 700; border-radius: 6px; text-decoration: none; border: 1px solid {% if session.get('language', 'en') == 'en' %}#38bdf8{% else %}rgba(148,163,184,0.3){% endif %}; background: {% if session.get('language', 'en') == 'en' %}rgba(56,189,248,0.25){% else %}rgba(15,23,42,0.6){% endif %}; color: {% if session.get('language', 'en') == 'en' %}#38bdf8{% else %}#cbd5e1{% endif %};">
                     🇬🇧 English
                 </a>
-                <a href="{{ url_for('auth.set_language', lang='hi') }}" class="btn btn-sm" style="padding: 4px 12px; font-size: 0.82rem; font-weight: 700; border-radius: 6px; text-decoration: none; border: 1px solid {% if session.get('language') == 'hi' %}#38bdf8{% else %}rgba(148,163,184,0.3){% endif %}; background: {% if session.get('language') == 'hi' %}rgba(56,189,248,0.25){% else %}rgba(15,23,42,0.6){% endif %}; color: {% if session.get('language') == 'hi' %}#38bdf8{% else %}#cbd5e1{% endif %};">
+                <a href="/set-language/hi" class="btn btn-sm" style="padding: 4px 12px; font-size: 0.82rem; font-weight: 700; border-radius: 6px; text-decoration: none; border: 1px solid {% if session.get('language') == 'hi' %}#38bdf8{% else %}rgba(148,163,184,0.3){% endif %}; background: {% if session.get('language') == 'hi' %}rgba(56,189,248,0.25){% else %}rgba(15,23,42,0.6){% endif %}; color: {% if session.get('language') == 'hi' %}#38bdf8{% else %}#cbd5e1{% endif %};">
                     🇮🇳 हिन्दी (Hindi)
                 </a>
-                <a href="{{ url_for('auth.set_language', lang='ta') }}" class="btn btn-sm" style="padding: 4px 12px; font-size: 0.82rem; font-weight: 700; border-radius: 6px; text-decoration: none; border: 1px solid {% if session.get('language') == 'ta' %}#38bdf8{% else %}rgba(148,163,184,0.3){% endif %}; background: {% if session.get('language') == 'ta' %}rgba(56,189,248,0.25){% else %}rgba(15,23,42,0.6){% endif %}; color: {% if session.get('language') == 'ta' %}#38bdf8{% else %}#cbd5e1{% endif %};">
+                <a href="/set-language/ta" class="btn btn-sm" style="padding: 4px 12px; font-size: 0.82rem; font-weight: 700; border-radius: 6px; text-decoration: none; border: 1px solid {% if session.get('language') == 'ta' %}#38bdf8{% else %}rgba(148,163,184,0.3){% endif %}; background: {% if session.get('language') == 'ta' %}rgba(56,189,248,0.25){% else %}rgba(15,23,42,0.6){% endif %}; color: {% if session.get('language') == 'ta' %}#38bdf8{% else %}#cbd5e1{% endif %};">
                     🇮🇳 தமிழ் (Tamil)
                 </a>
             </div>
@@ -476,7 +476,7 @@
                         <div style="margin-top:2px;"><strong style="color:#e2e8f0;">Allergies:</strong> {{ profile.allergies if profile and profile.allergies else 'Penicillin, Sulfa' }}</div>
                     </div>
 
-                    <form action="{{ url_for('dashboard.trigger_sos') }}" method="POST" onsubmit="return confirm('Trigger Emergency SOS to your designated contact?');">
+                    <form action="/dashboard/sos" method="POST" onsubmit="return confirm('Trigger Emergency SOS to your designated contact?');">
                         <button type="submit" class="btn btn-block" style="background:linear-gradient(135deg, #ef4444, #dc2626); color:white; width:100%; border:none; padding:10px; border-radius:10px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 14px rgba(220,38,38,0.4);">
                             <i data-lucide="alert-triangle" style="width:18px;height:18px;"></i>
                             <span>SEND EMERGENCY SOS</span>
