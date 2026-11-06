@@ -53,6 +53,75 @@ def init_db():
             if name not in medicine_columns:
                 conn.execute(f"ALTER TABLE medicines ADD COLUMN {name} {definition}")
         conn.commit()
+
+        # Ensure core demo users always exist (Render, local, Docker)
+        try:
+            from werkzeug.security import generate_password_hash
+            pw_hash = generate_password_hash("password123")
+
+            p = conn.execute("SELECT id FROM users WHERE username = 'patient_demo'").fetchone()
+            if not p:
+                conn.execute(
+                    "INSERT INTO users (username, email, password_hash, full_name, role) VALUES (?, ?, ?, ?, 'patient')",
+                    ("patient_demo", "patient@example.com", pw_hash, "Ramesh Sharma")
+                )
+                pid = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+                conn.execute(
+                    """INSERT OR IGNORE INTO patient_profiles 
+                       (user_id, age, gender, blood_group, allergies, conditions, emergency_contact_name, emergency_contact_phone)
+                       VALUES (?, 64, 'Male', 'B+', 'Penicillin', 'Type 2 Diabetes, Hypertension', 'Priya Sharma (Daughter)', '+91 98765 43211')""",
+                    (pid,)
+                )
+            else:
+                pid = p[0]
+
+            d = conn.execute("SELECT id FROM users WHERE username = 'doctor_demo'").fetchone()
+            if not d:
+                conn.execute(
+                    "INSERT INTO users (username, email, password_hash, full_name, role) VALUES (?, ?, ?, ?, 'doctor')",
+                    ("doctor_demo", "doctor@example.com", pw_hash, "Dr. Ananya Roy")
+                )
+                did = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+                conn.execute(
+                    """INSERT OR IGNORE INTO doctor_profiles 
+                       (user_id, specialty, license_number, qualifications, verification_status)
+                       VALUES (?, 'Cardiology & Internal Medicine', 'MCI-2018-847291', 'MBBS, MD, DM', 'verified')""",
+                    (did,)
+                )
+
+            a = conn.execute("SELECT id FROM users WHERE username = 'admin_demo'").fetchone()
+            if not a:
+                conn.execute(
+                    "INSERT INTO users (username, email, password_hash, full_name, role) VALUES (?, ?, ?, ?, 'admin')",
+                    ("admin_demo", "admin@example.com", pw_hash, "MediMitra Administrator")
+                )
+
+            c = conn.execute("SELECT id FROM users WHERE username = 'caregiver_demo'").fetchone()
+            if not c:
+                conn.execute(
+                    "INSERT INTO users (username, email, password_hash, full_name, role) VALUES (?, ?, ?, ?, 'caregiver')",
+                    ("caregiver_demo", "caregiver@example.com", pw_hash, "Priya Sharma")
+                )
+
+            # Ensure patient_demo has sample schedule so dashboard loads with full stats
+            med_cnt = conn.execute("SELECT COUNT(*) FROM medicines WHERE user_id = ?", (pid,)).fetchone()[0]
+            if med_cnt == 0:
+                conn.execute(
+                    """INSERT INTO medicines (user_id, name, generic_name, dosage, form, frequency, instructions, quantity, verified)
+                       VALUES (?, 'Metformin 500', 'Metformin Hydrochloride', '500mg', 'Tablet', '1-0-1', 'Take after food with water', 30, 1)""",
+                    (pid,)
+                )
+                m1_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+                conn.execute(
+                    """INSERT INTO schedules (user_id, medicine_id, scheduled_time, time_of_day, dosage_amount, instructions)
+                       VALUES (?, ?, '08:00', 'morning', '1 Tablet', 'Take after breakfast')""",
+                    (pid, m1_id)
+                )
+
+            conn.commit()
+        except Exception as ue:
+            print(f"[DB] Demo user init notice: {ue}")
+
         print("[DB] Database initialized successfully.")
     except Exception as e:
         print(f"[DB] Error initializing database: {e}")
