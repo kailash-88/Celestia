@@ -79,45 +79,17 @@ def create_app(config_class=None):
                    [username,email,generate_password_hash(password),full_name])
         click.echo("Administrator account created.")
 
-    # --- Context processor: inject user & multilingual translations into all templates ---
+    # --- Context processor: inject user into all templates ---
     @app.context_processor
     def inject_globals():
-        from flask import session
         from routes.auth import get_current_user
-        from services.translations import get_translation
-
-        user = get_current_user()
-        user_lang = user['language'] if (user and 'language' in user.keys()) else 'en'
-        lang = session.get('language') or user_lang or 'en'
-        if lang not in ('en', 'hi', 'ta'):
-            lang = 'en'
-
-        def t(key, default=None):
-            return get_translation(key, lang=lang, default=default)
-
-        return dict(current_user=user, current_lang=lang, t=t)
-
-    # --- Global Exception & Error Handler ---
-    @app.errorhandler(500)
-    def handle_500_error(e):
-        import traceback
-        tb = traceback.format_exc()
-        app.logger.error(f"[SERVER 500 ERROR] {tb}")
-        return f"<div style='padding:24px; font-family:sans-serif;'><h2>Internal Server Error (500)</h2><p>Details below:</p><pre style='background:#f1f5f9; padding:16px; border-radius:8px; border:1px solid #cbd5e1; overflow:auto;'>{tb}</pre></div>", 500
-
-    @app.errorhandler(Exception)
-    def handle_unhandled_exception(e):
-        import traceback
-        tb = traceback.format_exc()
-        app.logger.error(f"[UNHANDLED EXCEPTION] {tb}")
-        return f"<div style='padding:24px; font-family:sans-serif;'><h2>Server Exception</h2><p>Details below:</p><pre style='background:#f1f5f9; padding:16px; border-radius:8px; border:1px solid #cbd5e1; overflow:auto;'>{tb}</pre></div>", 500
+        return dict(current_user=get_current_user())
 
     return app
 
 
 # Module-level application instance for WSGI servers (Gunicorn, Render, etc.)
 app = create_app()
-application = app
 
 if __name__ == '__main__':
     import os

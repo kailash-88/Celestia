@@ -51,24 +51,6 @@ def _prepare_for_ocr(source_image):
         return [ImageEnhance.Contrast(gray).enhance(1.4)]
 
 
-def _call_cloud_ocr_space(image_path):
-    """Free Cloud OCR fallback when local Tesseract binary is not installed."""
-    import requests
-    try:
-        with open(image_path, 'rb') as f:
-            files = {'file': (os.path.basename(image_path), f, 'image/jpeg')}
-            data = {'apikey': 'K88992661888957', 'language': 'eng', 'OCREngine': '2'}
-            r = requests.post('https://api.ocr.space/parse/image', files=files, data=data, timeout=12)
-            if r.status_code == 200:
-                res = r.json()
-                results = res.get('ParsedResults', [])
-                if results:
-                    return results[0].get('ParsedText', '').strip()
-    except Exception as e:
-        print(f"[OCR] Cloud fallback notice: {e}")
-    return ""
-
-
 def extract_prescription_data(image_path, tesseract_cmd):
     """Extract text when OCR is available; returns raw text and detected label fields."""
     result = {
@@ -147,27 +129,13 @@ def extract_prescription_data(image_path, tesseract_cmd):
             result["fields"]["ocr_confidence"] = best_confidence
 
     except pytesseract.pytesseract.TesseractNotFoundError:
-        cloud_text = _call_cloud_ocr_space(image_path)
-        if cloud_text:
-            result["raw_text"] = cloud_text
-            result["fields"]["ocr_confidence"] = 80
-        else:
-            result["fields"]["unavailable"] = "Tesseract OCR is not installed."
+        result["fields"]["unavailable"] = (
+            "Tesseract OCR is not installed or its path is incorrect. Install Tesseract and set TESSERACT_CMD in .env."
+        )
         return result
     except Exception as error:
-        cloud_text = _call_cloud_ocr_space(image_path)
-        if cloud_text:
-            result["raw_text"] = cloud_text
-            result["fields"]["ocr_confidence"] = 80
-        else:
-            result["fields"]["unavailable"] = f"OCR could not process this image ({type(error).__name__})."
+        result["fields"]["unavailable"] = f"OCR could not process this image ({type(error).__name__})."
         return result
-
-    if not result["raw_text"]:
-        cloud_text = _call_cloud_ocr_space(image_path)
-        if cloud_text:
-            result["raw_text"] = cloud_text
-            result["fields"]["ocr_confidence"] = 80
 
     lines = [line.strip() for line in result["raw_text"].splitlines() if line.strip()]
     if lines:

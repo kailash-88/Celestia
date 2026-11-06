@@ -1,574 +1,462 @@
 {% extends "base.html" %}
-{% block title %}{{ t('patient_portal') }} – MediMitra{% endblock %}
+{% block title %}Patient Dashboard – MediMitra{% endblock %}
+
+{% block head_extra %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+{% endblock %}
 
 {% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 <style>
-/* Clean & Simple Patient Dashboard Styling */
-.patient-simple-dashboard {
-    max-width: 900px;
-    margin: 0 auto;
+.adherence-circle {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: rgba(13, 27, 46, 0.88);
+    border: 1px solid rgba(45, 212, 191, 0.22);
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+.refill-alert-banner {
+    background: linear-gradient(135deg, rgba(38, 20, 6, 0.95) 0%, rgba(20, 12, 5, 0.98) 100%) !important;
+    border: 1.5px solid rgba(245, 158, 11, 0.5) !important;
+    border-left: 6px solid #f59e0b !important;
+    padding: 16px 20px !important;
+    border-radius: 14px !important;
+    margin-bottom: 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 16px !important;
+    flex-wrap: wrap !important;
+    box-shadow: 0 8px 32px rgba(245, 158, 11, 0.12), inset 0 1px 0 rgba(251, 191, 36, 0.1) !important;
+}
+.refill-alert-content {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1 1 300px;
+}
+.refill-icon-box {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    background: rgba(245, 158, 11, 0.18);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    border-radius: 12px;
+}
+.refill-icon-box svg {
+    color: #fbbf24 !important;
+    width: 22px;
+    height: 22px;
+}
+.refill-alert-text {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 6px;
 }
-
-/* 1. Header & Language Bar */
-.patient-header-bar {
-    background: linear-gradient(135deg, rgba(14, 30, 52, 0.95) 0%, rgba(9, 21, 38, 0.98) 100%);
-    border: 1.5px solid rgba(56, 189, 248, 0.3);
-    border-radius: 18px;
-    padding: 24px 28px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+.refill-alert-title {
+    color: #fef3c7 !important;
+    font-size: 1.02rem !important;
+    font-weight: 750 !important;
+    letter-spacing: -0.01em;
+    display: block;
+}
+.refill-tags-container {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
     flex-wrap: wrap;
-    gap: 18px;
-}
-.patient-greeting h2 {
-    margin: 0 0 6px 0;
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: #f8fafc;
-    letter-spacing: -0.02em;
-}
-.patient-greeting p {
-    margin: 0;
-    font-size: 0.92rem;
-    color: #94a3b8;
-    max-width: 520px;
-}
-.lang-pills-wrap {
-    display: flex;
-    align-items: center;
     gap: 8px;
-    background: rgba(15, 23, 42, 0.85);
-    border: 1px solid rgba(56, 189, 248, 0.35);
-    border-radius: 9999px;
-    padding: 6px 10px;
+    align-items: center;
 }
-.lang-btn {
-    padding: 6px 14px;
-    border-radius: 9999px;
-    font-size: 0.84rem;
-    font-weight: 700;
-    text-decoration: none;
-    transition: all 0.2s ease;
+.refill-chip {
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    background: rgba(245, 158, 11, 0.12) !important;
+    border: 1px solid rgba(245, 158, 11, 0.35) !important;
+    border-radius: 9999px;
+    padding: 4px 12px;
 }
-.lang-btn.active {
-    background: #0284c7;
-    color: #ffffff;
-    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
+.refill-chip-name {
+    color: #fde68a !important;
+    font-weight: 700 !important;
+    font-size: 0.88rem !important;
 }
-.lang-btn:not(.active) {
-    color: #94a3b8;
-    background: transparent;
+.refill-chip-qty {
+    background: rgba(239, 68, 68, 0.22) !important;
+    color: #fca5a5 !important;
+    font-weight: 700 !important;
+    font-size: 0.76rem !important;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    border: 1px solid rgba(239, 68, 68, 0.45);
 }
-.lang-btn:not(.active):hover {
-    color: #f1f5f9;
-    background: rgba(255, 255, 255, 0.08);
+.refill-action-btn {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%) !important;
+    color: #ffffff !important;
+    font-weight: 650 !important;
+    font-size: 0.88rem !important;
+    padding: 9px 16px !important;
+    border-radius: 10px !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    border: 1px solid rgba(251, 191, 36, 0.3) !important;
+    box-shadow: 0 4px 14px rgba(180, 83, 9, 0.4) !important;
+    transition: all 0.2s ease !important;
+    white-space: nowrap !important;
 }
-
-/* 2. Hero Scanner Card */
-.scanner-hero-card {
-    background: linear-gradient(135deg, rgba(8, 28, 48, 0.95) 0%, rgba(4, 18, 32, 0.98) 100%);
-    border: 2px solid rgba(45, 212, 191, 0.4);
-    border-radius: 20px;
-    padding: 28px;
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4), 0 0 25px rgba(45, 212, 191, 0.1);
-    position: relative;
-    overflow: hidden;
+.refill-action-btn:hover {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+    color: #ffffff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(245, 158, 11, 0.45) !important;
 }
-.scanner-hero-top {
+.welcome-actions {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    gap: 10px;
     flex-wrap: wrap;
-    gap: 16px;
-    margin-bottom: 22px;
 }
-.scanner-hero-title-box {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-.scanner-icon-bubble {
-    width: 56px;
-    height: 56px;
-    border-radius: 16px;
-    background: linear-gradient(135deg, rgba(45, 212, 191, 0.2), rgba(2, 132, 199, 0.25));
-    border: 1.5px solid rgba(45, 212, 191, 0.5);
-    display: grid;
-    place-items: center;
-    color: #2dd4bf;
-    flex-shrink: 0;
-}
-.scanner-hero-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-}
-@media (max-width: 600px) {
-    .scanner-hero-actions {
-        grid-template-columns: 1fr;
+@media (max-width: 640px) {
+    .welcome-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+    .welcome-actions .btn {
+        width: 100% !important;
+        justify-content: center;
     }
 }
-.btn-scan-main {
-    background: linear-gradient(135deg, #0d9488 0%, #0284c7 100%);
-    color: #ffffff !important;
-    font-size: 1.05rem;
-    font-weight: 800;
-    padding: 16px 24px;
-    border-radius: 14px;
+.dose-action-btn {
     border: none;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45);
-    transition: all 0.2s ease;
-}
-.btn-scan-main:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(2, 132, 199, 0.6);
-}
-.btn-scan-sec {
-    background: rgba(15, 23, 42, 0.8);
-    color: #38bdf8 !important;
-    font-size: 0.98rem;
-    font-weight: 700;
-    padding: 16px 20px;
-    border-radius: 14px;
-    border: 1.5px solid rgba(56, 189, 248, 0.4);
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    transition: all 0.2s ease;
-}
-.btn-scan-sec:hover {
-    background: rgba(56, 189, 248, 0.15);
-    color: #ffffff !important;
-}
-
-/* Auto Camera Toggle Switch */
-.auto-camera-panel {
-    margin-top: 20px;
-    padding-top: 16px;
-    border-top: 1px dashed rgba(56, 189, 248, 0.25);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 14px;
-}
-.toggle-switch-ui {
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
     cursor: pointer;
-    user-select: none;
-}
-.toggle-switch-ui input {
-    width: 22px;
-    height: 22px;
-    accent-color: #0284c7;
-    cursor: pointer;
-}
-.badge-pill {
-    padding: 4px 10px;
-    border-radius: 9999px;
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-}
-.badge-active {
-    background: rgba(34, 197, 94, 0.2);
-    color: #4ade80;
-    border: 1px solid rgba(34, 197, 94, 0.4);
-}
-.badge-off {
-    background: rgba(148, 163, 184, 0.2);
-    color: #94a3b8;
-    border: 1px solid rgba(148, 163, 184, 0.3);
-}
-
-/* 3. Schedule Cards */
-.schedule-section-card {
-    background: rgba(13, 27, 46, 0.9);
-    border: 1.5px solid rgba(56, 189, 248, 0.25);
-    border-radius: 18px;
-    padding: 24px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-}
-.schedule-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-.schedule-header h3 {
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 800;
-    color: #f1f5f9;
-}
-.med-card-row {
-    background: rgba(18, 36, 60, 0.75);
-    border: 1px solid rgba(56, 189, 248, 0.2);
-    border-radius: 14px;
-    padding: 16px 20px;
-    margin-bottom: 14px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 16px;
-    transition: all 0.2s ease;
-}
-.med-card-row:hover {
-    border-color: rgba(45, 212, 191, 0.4);
-    background: rgba(22, 44, 72, 0.85);
-}
-.med-info-box {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-}
-.med-icon-wrap {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    background: rgba(2, 132, 199, 0.2);
-    border: 1px solid rgba(2, 132, 199, 0.4);
-    display: grid;
-    place-items: center;
-    color: #38bdf8;
-    flex-shrink: 0;
-}
-.med-name-text {
-    font-size: 1.1rem;
-    font-weight: 800;
-    color: #f8fafc;
-    margin: 0 0 4px 0;
-}
-.med-meta-text {
-    font-size: 0.86rem;
-    color: #94a3b8;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-.food-badge-pill {
-    background: rgba(245, 158, 11, 0.16);
-    border: 1px solid rgba(245, 158, 11, 0.4);
-    color: #fbbf24;
-    font-size: 0.78rem;
-    font-weight: 700;
-    padding: 3px 10px;
-    border-radius: 9999px;
     display: inline-flex;
     align-items: center;
     gap: 4px;
 }
-.btn-take-dose {
-    background: #16a34a;
-    color: #ffffff;
-    border: none;
-    border-radius: 10px;
-    padding: 10px 20px;
-    font-weight: 750;
-    font-size: 0.92rem;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4);
-    transition: all 0.2s ease;
+.btn-take { background: rgba(34, 197, 94, 0.18); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.4); }
+.btn-take:hover { background: rgba(34, 197, 94, 0.32); }
+.btn-skip { background: rgba(239, 68, 68, 0.18); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+.btn-skip:hover { background: rgba(239, 68, 68, 0.32); }
+.pill-status {
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
-.btn-take-dose:hover {
-    background: #15803d;
-    transform: translateY(-1px);
-}
-.btn-dose-taken {
-    background: rgba(34, 197, 94, 0.16);
-    color: #4ade80;
-    border: 1px solid rgba(34, 197, 94, 0.4);
-    border-radius: 10px;
-    padding: 8px 16px;
-    font-weight: 750;
-    font-size: 0.9rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
-
-/* Empty Schedule State */
-.empty-schedule-card {
-    text-align: center;
-    padding: 36px 20px;
-    color: #94a3b8;
-}
-.empty-schedule-card i {
-    width: 48px;
-    height: 48px;
-    color: #38bdf8;
-    margin-bottom: 12px;
-    opacity: 0.8;
-}
-
-/* Emergency & Caregiver section */
-.bottom-support-bar {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 16px;
-}
-.emergency-card-simple {
-    background: rgba(239, 68, 68, 0.1);
-    border: 1.5px solid rgba(239, 68, 68, 0.35);
-    border-radius: 16px;
-    padding: 18px 22px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 14px;
-}
-.emergency-card-simple h4 {
-    margin: 0 0 4px 0;
-    color: #fca5a5;
-    font-size: 1.05rem;
-    font-weight: 750;
-}
-.emergency-card-simple p {
-    margin: 0;
-    font-size: 0.85rem;
-    color: #cbd5e1;
-}
-.btn-sos-trigger {
-    background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
-    color: #ffffff;
-    font-weight: 800;
-    font-size: 0.92rem;
-    padding: 10px 20px;
-    border-radius: 10px;
-    border: none;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.45);
-}
+.status-taken { background: rgba(34, 197, 94, 0.16); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.35); }
+.status-pending { background: rgba(245, 158, 11, 0.16); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); }
+.status-missed { background: rgba(239, 68, 68, 0.16); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35); }
+.status-skipped { background: rgba(148, 163, 184, 0.16); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); }
 </style>
 {% endblock %}
 
-{% block page_title %}{{ t('patient_portal') }}{% endblock %}
+{% block page_title %}Patient Dashboard{% endblock %}
 
 {% block content %}
-<div class="patient-simple-dashboard">
+<section class="dashboard-page" aria-label="Patient dashboard">
 
-    <!-- 1. Header with Language Switcher -->
-    <div class="patient-header-bar">
-        <div class="patient-greeting">
-            <h2>{{ t('greeting_morning') if now_hour < 12 else (t('greeting_afternoon') if now_hour < 17 else t('greeting_evening')) }}, {{ user.full_name }}! 👋</h2>
-            <p>{{ t('welcome_sub') }}</p>
+    <!-- Personalized Welcome Banner -->
+    <div class="welcome-banner">
+        <div style="flex: 1 1 auto; min-width: 0;">
+            <span class="welcome-eyebrow">PATIENT WELLNESS PORTAL</span>
+            <h2>Good {{ 'morning' if now_hour < 12 else ('afternoon' if now_hour < 17 else 'evening' ) }}, {{ user.full_name }}! 👋</h2>
+            <p>Here is your personalized medicine schedule, daily adherence, and clinical updates.</p>
         </div>
-
-        <!-- 1-Tap Language Switcher -->
-        <div class="lang-pills-wrap">
-            <a href="/set-language/en" class="lang-btn {% if current_lang == 'en' %}active{% endif %}">
-                🇬🇧 English
+        <div class="welcome-actions">
+            <a href="{{ url_for('scanner.medicine_scan') }}" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px;">
+                <i data-lucide="scan"></i>
+                <span>Scan Medicine Strip</span>
             </a>
-            <a href="/set-language/hi" class="lang-btn {% if current_lang == 'hi' %}active{% endif %}">
-                🇮🇳 हिन्दी
-            </a>
-            <a href="/set-language/ta" class="lang-btn {% if current_lang == 'ta' %}active{% endif %}">
-                🇮🇳 தமிழ்
+            <a href="{{ url_for('scanner.scan') }}" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px;">
+                <i data-lucide="file-text"></i>
+                <span>Upload Prescription</span>
             </a>
         </div>
     </div>
 
-    <!-- 2. Hero Scanner Card (Prominent & Real) -->
-    <div class="scanner-hero-card">
-        <div class="scanner-hero-top">
-            <div class="scanner-hero-title-box">
-                <div class="scanner-icon-bubble">
-                    <i data-lucide="camera" style="width: 28px; height: 28px;"></i>
-                </div>
-                <div>
-                    <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: #f8fafc;">{{ t('scanner_title') }}</h3>
-                    <p style="margin: 4px 0 0 0; font-size: 0.88rem; color: #94a3b8;">{{ t('scanner_sub') }}</p>
-                </div>
+    <!-- Refill Warnings -->
+    {% if refill_alerts %}
+    <div class="refill-alert-banner">
+        <div class="refill-alert-content">
+            <div class="refill-icon-box">
+                <i data-lucide="alert-circle"></i>
             </div>
-        </div>
-
-        <!-- Big 1-Tap Action Buttons -->
-        <div class="scanner-hero-actions">
-            <a href="{{ url_for('scanner.medicine_scan') }}?autocamera=1" class="btn-scan-main">
-                <i data-lucide="camera" style="width: 24px; height: 24px;"></i>
-                <span>{{ t('open_camera_btn') }}</span>
-            </a>
-            <a href="{{ url_for('scanner.scan') }}" class="btn-scan-sec">
-                <i data-lucide="file-text" style="width: 22px; height: 22px;"></i>
-                <span>{{ t('upload_prescription_btn') }}</span>
-            </a>
-        </div>
-
-        <!-- Auto-Camera Launch Toggle -->
-        <div class="auto-camera-panel">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 0.9rem; font-weight: 700; color: #e2e8f0;">{{ t('auto_cam_title') }}</span>
-                <span id="autoCamBadge" class="badge-pill {% if session.get('auto_camera', 1) == 1 %}badge-active{% else %}badge-off{% endif %}">
-                    {% if session.get('auto_camera', 1) == 1 %}{{ t('auto_cam_badge_active') }}{% else %}{{ t('auto_cam_badge_off') }}{% endif %}
-                </span>
-            </div>
-
-            <label class="toggle-switch-ui">
-                <span id="autoCamToggleLabel" style="font-size: 0.85rem; font-weight: 600; color: #94a3b8;">
-                    {% if session.get('auto_camera', 1) == 1 %}{{ t('auto_cam_on') }}{% else %}{{ t('auto_cam_off') }}{% endif %}
-                </span>
-                <input type="checkbox" id="autoCamCheckbox" {% if session.get('auto_camera', 1) == 1 %}checked{% endif %} onchange="updateAutoCamera(this.checked)">
-            </label>
-        </div>
-    </div>
-
-    <!-- 3. Today's Medicine Schedule (Simple Cards) -->
-    <div class="schedule-section-card">
-        <div class="schedule-header">
-            <div>
-                <h3>{{ t('today_schedule_title') }} ⏰</h3>
-                <span style="font-size: 0.86rem; color: #94a3b8;">{{ t('today_schedule_sub') }}</span>
-            </div>
-            <a href="{{ url_for('schedule.index') }}" style="color: #38bdf8; font-weight: 700; font-size: 0.88rem; text-decoration: none;">
-                {{ t('nav_schedule') }} →
-            </a>
-        </div>
-
-        {% if today_schedule and today_schedule|length > 0 %}
-            {% for item in today_schedule %}
-            <div class="med-card-row">
-                <div class="med-info-box">
-                    <div class="med-icon-wrap">
-                        <i data-lucide="pill" style="width: 22px; height: 22px;"></i>
-                    </div>
-                    <div>
-                        <h4 class="med-name-text">{{ item.medicine_name }}</h4>
-                        <div class="med-meta-text">
-                            <span>🕒 {{ item.scheduled_time }} ({{ item.time_of_day|capitalize }})</span>
-                            <span>• {{ item.dosage_amount or '1 Dose' }}</span>
-                            <span class="food-badge-pill">
-                                <i data-lucide="utensils" style="width: 12px; height: 12px;"></i>
-                                {% if 'before' in (item.before_after_food|lower) %}
-                                    {{ t('take_before_food') }}
-                                {% else %}
-                                    {{ t('take_after_food') }}
-                                {% endif %}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    {% if item.status == 'taken' %}
-                    <span class="btn-dose-taken">
-                        <i data-lucide="check-circle" style="width: 16px; height: 16px;"></i>
-                        <span>{{ t('dose_taken') }}</span>
+            <div class="refill-alert-text">
+                <strong class="refill-alert-title">⚠️ Medicine Refill Required</strong>
+                <div class="refill-tags-container">
+                    {% for r in refill_alerts %}
+                    <span class="refill-chip">
+                        <span class="refill-chip-name">{{ r.name }}</span>
+                        <span class="refill-chip-qty">Only {{ r.quantity }} left!</span>
                     </span>
-                    {% else %}
-                    <form action="/dashboard/dose/{{ item.schedule_id }}/taken" method="POST" style="margin: 0;">
-                        <button type="submit" class="btn-take-dose">
-                            <i data-lucide="check" style="width: 18px; height: 18px;"></i>
-                            <span>{{ t('take_dose') }}</span>
-                        </button>
-                    </form>
-                    {% endif %}
+                    {% endfor %}
                 </div>
             </div>
-            {% endfor %}
-        {% else %}
-            <div class="empty-schedule-card">
-                <i data-lucide="calendar-check"></i>
-                <h4 style="margin: 0 0 6px 0; color: #f1f5f9; font-size: 1.1rem;">{{ t('no_meds_title') }}</h4>
-                <p style="margin: 0 0 16px 0; font-size: 0.88rem;">{{ t('no_meds_desc') }}</p>
-                <a href="{{ url_for('scanner.medicine_scan') }}?autocamera=1" class="btn btn-primary btn-sm" style="display: inline-flex; align-items: center; gap: 6px; background: #0284c7; font-weight: 700; border-radius: 8px;">
-                    <i data-lucide="camera"></i>
-                    <span>{{ t('open_camera_btn') }}</span>
-                </a>
-            </div>
-        {% endif %}
-    </div>
-
-    <!-- 4. Simple Doctor Advice Notice (If any) -->
-    {% if recent_doctor_advice and recent_doctor_advice|length > 0 %}
-    <div style="background: rgba(15, 23, 42, 0.9); border: 1.5px solid rgba(45, 212, 191, 0.3); border-radius: 16px; padding: 20px 24px;">
-        <h4 style="margin: 0 0 10px 0; color: #2dd4bf; display: flex; align-items: center; gap: 8px; font-size: 1.05rem;">
-            <i data-lucide="stethoscope"></i>
-            <span>{{ t('doctor_advice_title') }}</span>
-        </h4>
-        {% for advice in recent_doctor_advice %}
-        <div style="background: rgba(8, 20, 36, 0.6); border-radius: 10px; padding: 12px 16px; margin-top: 8px;">
-            <strong style="color: #f1f5f9; font-size: 0.92rem;">Dr. {{ advice.doctor_name }}:</strong>
-            <p style="margin: 4px 0 0 0; font-size: 0.88rem; color: #cbd5e1;">{{ advice.response_text }}</p>
         </div>
-        {% endfor %}
+        <a href="{{ url_for('medicines.index') }}" class="refill-action-btn">
+            <i data-lucide="package-plus"></i>
+            <span>Manage Cabinet</span>
+        </a>
     </div>
     {% endif %}
 
-    <!-- 5. Emergency SOS Simple Card -->
-    <div class="bottom-support-bar">
-        <div class="emergency-card-simple">
-            <div>
-                <h4>{{ t('emergency_sos_title') }}</h4>
-                <p>{{ t('emergency_sos_desc') }}</p>
+    <!-- Caregiver Requests if pending -->
+    {% if caregiver_requests %}
+    <section class="card mb-6" style="border-left: 4px solid #0284c7;">
+        <div class="card-header"><h3 style="margin:0; font-size:1.05rem;">Caregiver Connection Request</h3></div>
+        <div class="medicine-list">
+            {% for request in caregiver_requests %}
+            <article class="medicine-item">
+                <div class="medicine-details">
+                    <div class="medicine-name"><strong>{{ request.full_name }}</strong> requested to link as your family caregiver</div>
+                    <div class="medicine-meta">They will be able to receive missed-dose alerts and support your medication schedule.</div>
+                </div>
+                <div class="inline-actions" style="display:flex; gap:8px;">
+                    <form method="post" action="{{ url_for('caregiver.respond_to_request', link_id=request.id, decision='approve') }}">
+                        <button class="btn btn-primary btn-sm">Approve</button>
+                    </form>
+                    <form method="post" action="{{ url_for('caregiver.respond_to_request', link_id=request.id, decision='reject') }}">
+                        <button class="btn btn-outline btn-sm">Decline</button>
+                    </form>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Stats & Adherence Grid -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-teal"><i data-lucide="pill"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">Cabinet Medicines</span>
+                <span class="stat-value">{{ stats.medicines }}</span>
+                <span class="stat-sub">Active prescriptions</span>
             </div>
-            <form action="/dashboard/sos" method="POST" onsubmit="return confirm('Trigger Emergency SOS to your designated contact?');" style="margin: 0;">
-                <button type="submit" class="btn-sos-trigger">
-                    <i data-lucide="phone-call" style="width: 18px; height: 18px;"></i>
-                    <span>{{ t('emergency_btn') }}</span>
-                </button>
-            </form>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-blue"><i data-lucide="check-circle-2"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">Today's Adherence</span>
+                <span class="stat-value" style="color: {% if stats.adherence >= 80 %}#16a34a{% elif stats.adherence >= 50 %}#d97706{% else %}#dc2626{% endif %};">
+                    {{ stats.adherence }}%
+                </span>
+                <span class="stat-sub">{{ stats.doses_taken }} of {{ stats.doses_today }} doses taken</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-orange"><i data-lucide="clock"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">Daily Schedules</span>
+                <span class="stat-value">{{ stats.schedules }}</span>
+                <span class="stat-sub">Active reminders</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon {% if stats.alerts > 0 %}stat-icon-red{% else %}stat-icon-green{% endif %}"><i data-lucide="shield-alert"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">Safety Alerts</span>
+                <span class="stat-value">{{ stats.alerts }}</span>
+                <span class="stat-sub">Drug safety warnings</span>
+            </div>
         </div>
     </div>
 
-</div>
-{% endblock %}
+    <!-- Quick Shortcuts Row -->
+    <div class="quick-actions" style="margin-top:20px;">
+        <a href="{{ url_for('scanner.medicine_scan') }}" class="quick-action-btn">
+            <i data-lucide="scan" style="color:#0284c7;"></i>
+            <span>Scan Medicine Strip</span>
+        </a>
+        <a href="{{ url_for('scanner.scan') }}" class="quick-action-btn">
+            <i data-lucide="file-up" style="color:#059669;"></i>
+            <span>Upload Prescription</span>
+        </a>
+        <a href="{{ url_for('assistant.index') }}" class="quick-action-btn">
+            <i data-lucide="bot" style="color:#7c3aed;"></i>
+            <span>AI Health Assistant</span>
+        </a>
+        <a href="{{ url_for('queries.patient_queries') }}" class="quick-action-btn">
+            <i data-lucide="message-square-plus" style="color:#d97706;"></i>
+            <span>Ask My Doctor</span>
+        </a>
+        <a href="{{ url_for('records.index') }}" class="quick-action-btn">
+            <i data-lucide="clipboard-list" style="color:#0891b2;"></i>
+            <span>Health Records</span>
+        </a>
+        <a href="{{ url_for('safety.index') }}" class="quick-action-btn">
+            <i data-lucide="shield-check" style="color:#dc2626;"></i>
+            <span>Safety Centre</span>
+        </a>
+    </div>
 
-{% block scripts %}
-<script>
-function updateAutoCamera(enabled) {
-    const badge = document.getElementById('autoCamBadge');
-    const label = document.getElementById('autoCamToggleLabel');
-    
-    if (enabled) {
-        badge.className = "badge-pill badge-active";
-        badge.textContent = "{{ t('auto_cam_badge_active') }}";
-        label.textContent = "{{ t('auto_cam_on') }}";
-        localStorage.setItem('medimitra_auto_camera', '1');
-    } else {
-        badge.className = "badge-pill badge-off";
-        badge.textContent = "{{ t('auto_cam_badge_off') }}";
-        label.textContent = "{{ t('auto_cam_off') }}";
-        localStorage.setItem('medimitra_auto_camera', '0');
-    }
+    <!-- Main Two-Column Layout -->
+    <div class="dashboard-grid" style="margin-top:24px;">
+        
+        <!-- Left: Today's Medicine Schedule with Interactive Actions -->
+        <div class="dashboard-main">
+            <div class="card">
+                <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <i data-lucide="calendar-clock" style="color:#0284c7;"></i>
+                        <h3 style="margin:0;">Today's Medicine Schedule</h3>
+                    </div>
+                    <span style="font-size:0.85rem; color:#64748b;">{{ stats.doses_taken }} / {{ stats.doses_today }} Completed</span>
+                </div>
 
-    fetch('/set-auto-camera', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enabled: enabled })
-    }).catch(err => console.log('Local preference saved'));
-}
+                <div class="medicine-list" style="padding:16px;">
+                    {% if today_schedule %}
+                        {% for s in today_schedule %}
+                        <div class="medicine-item" style="display:flex; justify-content:space-between; align-items:center; padding:12px 14px; border:1px solid rgba(45, 212, 191, 0.16); border-radius:12px; margin-bottom:10px; background:rgba(12, 25, 44, 0.7); gap:12px;">
+                            <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:0;">
+                                <div style="background:rgba(14, 34, 58, 0.95); color:#38bdf8; padding:6px 12px; border-radius:8px; font-weight:750; font-size:0.92rem; border:1px solid rgba(56, 189, 248, 0.35); font-variant-numeric:tabular-nums; flex-shrink:0; box-shadow:0 2px 6px rgba(0,0,0,0.25);">
+                                    {{ s.scheduled_time }}
+                                </div>
+                                <div style="flex:1; min-width:0;">
+                                    <div style="font-weight:750; font-size:1.02rem; color:#f8fafc !important; letter-spacing:-0.01em; margin-bottom:2px;">{{ s.medicine_name }}</div>
+                                    <div style="font-size:0.83rem; color:#94a3b8; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                                        <span>{{ s.dosage_amount or '1 Tablet' }}</span>
+                                        {% if s.instructions %}
+                                        <span>• {{ s.instructions }}</span>
+                                        {% endif %}
+                                        {% if s.before_after_food %}
+                                        <span style="background:rgba(45, 212, 191, 0.14); color:#2dd4bf; border:1px solid rgba(45, 212, 191, 0.3); border-radius:6px; padding:2px 8px; font-weight:600; font-size:0.76rem; display:inline-block;">{{ s.before_after_food }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
 
-document.addEventListener('DOMContentLoaded', () => {
-    if (window.lucide) {
-        lucide.createIcons();
-    }
-});
-</script>
+                            <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+                                {% if s.status == 'taken' %}
+                                    <span class="pill-status status-taken"><i data-lucide="check" style="width:12px;height:12px;display:inline;"></i> Taken</span>
+                                {% elif s.status == 'skipped' %}
+                                    <span class="pill-status status-skipped">Skipped</span>
+                                {% elif s.status == 'missed' %}
+                                    <span class="pill-status status-missed">Missed</span>
+                                {% else %}
+                                    <form method="POST" action="{{ url_for('dashboard.log_dose', schedule_id=s.schedule_id, action='taken') }}" style="margin:0;">
+                                        <button type="submit" class="dose-action-btn btn-take">
+                                            <i data-lucide="check" style="width:14px;height:14px;"></i> <span>Take</span>
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="{{ url_for('dashboard.log_dose', schedule_id=s.schedule_id, action='skipped') }}" style="margin:0;">
+                                        <button type="submit" class="dose-action-btn btn-skip">
+                                            <i data-lucide="x" style="width:14px;height:14px;"></i> <span>Skip</span>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div style="text-align:center; padding:32px 16px; color:#64748b;">
+                            <i data-lucide="calendar-check" style="width:48px; height:48px; color:#cbd5e1; margin-bottom:12px;"></i>
+                            <p style="margin:0; font-weight:600;">No doses scheduled for today!</p>
+                            <p style="font-size:0.85rem;">Add a schedule or scan a prescription to get automated reminders.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recent Doctor Advice / Consultations -->
+            {% if recent_doctor_advice %}
+            <div class="card" style="margin-top:20px;">
+                <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <i data-lucide="message-square" style="color:#059669;"></i>
+                        <h3 style="margin:0; font-size:1.05rem;">Doctor's Recent Medical Advice</h3>
+                    </div>
+                    <a href="{{ url_for('queries.patient_queries') }}" style="font-size:0.85rem;">View All Queries &rarr;</a>
+                </div>
+                <div style="padding:16px;">
+                    {% for q in recent_doctor_advice %}
+                    <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(16, 185, 129, 0.25); border-left: 4px solid #10b981; padding: 12px 16px; border-radius: 8px; margin-bottom: 10px;">
+                        <div style="font-weight: 700; color: #f1f5f9; font-size: 0.95rem;">Q: {{ q.subject }}</div>
+                        <div style="font-size: 0.9rem; color: #cbd5e1; margin-top: 6px; line-height: 1.4;">
+                            <strong style="color: #34d399;">{{ q.doctor_name or 'Dr. Ananya Roy' }}:</strong> {{ q.doctor_response }}
+                        </div>
+                        <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">Answered {{ q.answered_at }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Right Column: Emergency SOS Card & Patient Profile -->
+        <div class="dashboard-sidebar">
+            
+            <!-- Emergency SOS Card -->
+            <div class="card" style="border: 1.5px solid rgba(239, 68, 68, 0.45); background: linear-gradient(135deg, rgba(32, 12, 12, 0.94) 0%, rgba(18, 8, 8, 0.96) 100%); box-shadow: 0 8px 30px rgba(220, 38, 38, 0.15);">
+                <div class="card-header" style="background: rgba(239, 68, 68, 0.15); border-bottom: 1px solid rgba(239, 68, 68, 0.3);">
+                    <h3 style="margin:0; color:#fca5a5; display:flex; align-items:center; gap:8px;">
+                        <i data-lucide="shield-alert" style="width:20px;height:20px;color:#ef4444;"></i> Emergency Contact
+                    </h3>
+                </div>
+                <div style="padding:16px;">
+                    <div style="margin-bottom:12px;">
+                        <span style="font-size:0.75rem; color:#94a3b8; text-transform:uppercase; font-weight:700; letter-spacing:0.04em;">Designated Contact</span>
+                        <div style="font-size:1.02rem; font-weight:700; color:#f1f5f9; margin-top:2px;">
+                            {{ profile.emergency_contact_name if profile and profile.emergency_contact_name else 'Priya Sharma (Daughter)' }}
+                        </div>
+                        <div style="font-size:0.88rem; color:#38bdf8; font-weight:600; margin-top:4px; display:flex; align-items:center; gap:6px;">
+                            <i data-lucide="phone" style="width:14px;height:14px;"></i>
+                            <span>{{ profile.emergency_contact_phone if profile and profile.emergency_contact_phone else '+91 98765 43211' }}</span>
+                        </div>
+                    </div>
+
+                    <div style="border-top:1px dashed rgba(239, 68, 68, 0.25); padding-top:10px; margin-bottom:16px; font-size:0.84rem; color:#cbd5e1;">
+                        <div><strong style="color:#e2e8f0;">Blood Group:</strong> {{ profile.blood_group if profile and profile.blood_group else 'B+' }}</div>
+                        <div style="margin-top:2px;"><strong style="color:#e2e8f0;">Allergies:</strong> {{ profile.allergies if profile and profile.allergies else 'Penicillin, Sulfa' }}</div>
+                    </div>
+
+                    <form action="{{ url_for('dashboard.trigger_sos') }}" method="POST" onsubmit="return confirm('Trigger Emergency SOS to your designated contact?');">
+                        <button type="submit" class="btn btn-block" style="background:linear-gradient(135deg, #ef4444, #dc2626); color:white; width:100%; border:none; padding:10px; border-radius:10px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 14px rgba(220,38,38,0.4);">
+                            <i data-lucide="alert-triangle" style="width:18px;height:18px;"></i>
+                            <span>SEND EMERGENCY SOS</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Connected Caregiver Card -->
+            <div class="card" style="margin-top:20px;">
+                <div class="card-header">
+                    <h3 style="margin:0; font-size:1.05rem; display:flex; align-items:center; gap:8px;">
+                        <i data-lucide="heart-handshake" style="color:#0284c7;"></i> Connected Caregiver
+                    </h3>
+                </div>
+                <div style="padding:16px;">
+                    {% if caregiver %}
+                        <div style="font-weight:700; color:#f1f5f9;">{{ caregiver.full_name }}</div>
+                        <div style="font-size:0.85rem; color:#94a3b8;">Phone: {{ caregiver.phone or 'Active' }}</div>
+                        <div style="margin-top:8px; font-size:0.8rem; color:#34d399; font-weight:600;">
+                            <i data-lucide="check-circle" style="width:14px;height:14px;display:inline;"></i> Receiving your missed-dose alerts
+                        </div>
+                    {% else %}
+                        <p style="font-size:0.85rem; color:#94a3b8; margin:0 0 10px 0;">No caregiver connected yet. Family members can connect using your patient ID <strong style="color:#38bdf8;">#{{ user.id }}</strong>.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
 {% endblock %}

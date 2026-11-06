@@ -1,71 +1,52 @@
 """
-MediMitra Authentication & Settings Routes
-Handles user registration, login, logout, role validation,
-language preferences (English, Hindi, Tamil), and auto-camera settings.
+MediMitra Authentication Routes
+Handles login, registration, and logout.
 """
 
-from functools import wraps
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, g, jsonify
+from flask import Blueprint, request, render_template, redirect, url_for, session, flash, abort
 from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
 from database.db import query_db, execute_db
 
 auth_bp = Blueprint('auth', __name__)
 
 
+# --- Decorators ---
+
 def login_required(f):
-    """Decorator to require login for a route."""
+    """Decorator to require authentication."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
-            flash('Please log in to access this page.', 'warning')
-            return redirect(url_for('auth.login'))
-        user = get_current_user()
-        if not user:
-            session.clear()
-            flash('Your session has expired. Please log in again.', 'warning')
+            flash('Please log in to continue.', 'warning')
             return redirect(url_for('auth.login'))
         return f(*args, **kwargs)
     return decorated_function
 
 
 def role_required(*roles):
-    """Decorator to require specific role(s) for a route."""
-    def decorator(f):
+    """Restrict a route to the listed account roles after authentication."""
+    def decorate(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if 'user_id' not in session:
-                flash('Please log in to access this page.', 'warning')
+                flash('Please log in to continue.', 'warning')
                 return redirect(url_for('auth.login'))
-            user = get_current_user()
-            if not user:
-                session.clear()
-                flash('Your session has expired. Please log in again.', 'warning')
-                return redirect(url_for('auth.login'))
-            if user['role'] not in roles:
-                flash('Camera scanning and access are reserved exclusively for Patient accounts.', 'error')
-                if user['role'] == 'doctor':
-                    return redirect(url_for('doctor.index'))
-                if user['role'] == 'admin':
-                    return redirect(url_for('admin.index'))
-                if user['role'] == 'caregiver':
-                    return redirect(url_for('caregiver.index'))
-                return redirect(url_for('dashboard.index'))
+            if session.get('role') not in roles:
+                abort(403)
             return f(*args, **kwargs)
         return decorated_function
-    return decorator
+    return decorate
 
 
 def get_current_user():
-    """Get the currently logged-in user from database."""
-    if 'user_id' not in session:
-        return None
-    if not hasattr(g, 'current_user'):
-        g.current_user = query_db(
-            'SELECT * FROM users WHERE id = ?',
-            [session['user_id']], one=True
-        )
-    return g.current_user
+    """Get the currently logged-in user from the database."""
+    if 'user_id' in session:
+        return query_db('SELECT * FROM users WHERE id = ?', [session['user_id']], one=True)
+    return None
 
+
+# --- Routes ---
 
 @auth_bp.route('/')
 def landing():
@@ -73,7 +54,6 @@ def landing():
     if 'user_id' in session:
         return redirect(url_for('dashboard.index'))
     return render_template('landing.html')
-
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -96,8 +76,6 @@ def login():
             session['username'] = user['username']
             session['full_name'] = user['full_name']
             session['role'] = user['role']
-            session['language'] = user['language'] if ('language' in user.keys() and user['language']) else 'en'
-            session['auto_camera'] = user['auto_camera'] if ('auto_camera' in user.keys() and user['auto_camera'] is not None) else 1
             flash(f'Welcome back, {user["full_name"]}!', 'success')
             return redirect(url_for('dashboard.index'))
         else:
@@ -119,13 +97,9 @@ def register():
         password = request.form.get('password', '')
         confirm = request.form.get('confirm_password', '')
         role = request.form.get('role', 'patient')
-        language = request.form.get('language', 'en')
         specialty = request.form.get('specialty', '').strip()
         license_number = request.form.get('license_number', '').strip()
         qualifications = request.form.get('qualifications', '').strip()
-
-        if language not in ('en', 'hi', 'ta'):
-            language = 'en'
 
         # Validation
         errors = []
@@ -163,12 +137,10 @@ def register():
         # Create user
         password_hash = generate_password_hash(password)
         account_id = execute_db(
-            'INSERT INTO users (username, email, password_hash, full_name, role, language, auto_camera) VALUES (?, ?, ?, ?, ?, ?, 1)',
-            [username, email, password_hash, full_name, role, language]
+            'INSERT INTO users (username, email, password_hash, full_name, role) VALUES (?, ?, ?, ?, ?)',
+            [username, email, password_hash, full_name, role]
         )
-        if role == 'patient':
-            execute_db('INSERT OR IGNORE INTO patient_profiles (user_id) VALUES (?)', [account_id])
-        elif role == 'doctor':
+        if role == 'doctor':
             execute_db(
                 'INSERT INTO doctor_profiles (user_id, specialty, license_number, qualifications) VALUES (?, ?, ?, ?)',
                 [account_id, specialty, license_number, qualifications or None]
@@ -182,33 +154,6 @@ def register():
         return redirect(url_for('auth.login'))
 
     return render_template('register.html')
-
-
-@auth_bp.route('/set-language/<lang>', methods=['GET', 'POST'])
-def set_language(lang):
-    """Switch language (en: English, hi: Hindi, ta: Tamil)."""
-    if lang in ('en', 'hi', 'ta'):
-        session['language'] = lang
-        if 'user_id' in session:
-            execute_db('UPDATE users SET language = ? WHERE id = ?', [lang, session['user_id']])
-        lang_names = {'en': 'English', 'hi': 'हिन्दी (Hindi)', 'ta': 'தமிழ் (Tamil)'}
-        flash(f'Language updated to {lang_names.get(lang, lang)}.', 'info')
-
-    referrer = request.referrer
-    if referrer and '/login' not in referrer and '/register' not in referrer:
-        return redirect(referrer)
-    return redirect(url_for('dashboard.index', view='dashboard'))
-
-
-@auth_bp.route('/set-auto-camera', methods=['POST'])
-@login_required
-def set_auto_camera():
-    """Toggle auto-open camera on launch preference."""
-    data = request.get_json() or {}
-    enabled = 1 if data.get('enabled') else 0
-    session['auto_camera'] = enabled
-    execute_db('UPDATE users SET auto_camera = ? WHERE id = ?', [enabled, session['user_id']])
-    return jsonify({'status': 'success', 'auto_camera': enabled})
 
 
 @auth_bp.route('/logout')
@@ -230,23 +175,14 @@ def settings():
         if action == 'profile':
             full_name = request.form.get('full_name', '').strip()
             phone = request.form.get('phone', '').strip() or None
-            language = request.form.get('language', 'en')
-            auto_cam = 1 if request.form.get('auto_camera') == '1' else 0
-
-            if language not in ('en', 'hi', 'ta'):
-                language = 'en'
 
             if not full_name:
                 flash('Full name cannot be empty.', 'error')
             else:
-                execute_db(
-                    'UPDATE users SET full_name = ?, phone = ?, language = ?, auto_camera = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-                    [full_name, phone, language, auto_cam, user['id']]
-                )
+                execute_db('UPDATE users SET full_name = ?, phone = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+                           [full_name, phone, user['id']])
                 session['full_name'] = full_name
-                session['language'] = language
-                session['auto_camera'] = auto_cam
-                flash('Profile and preferences updated successfully.', 'success')
+                flash('Profile updated successfully.', 'success')
 
         elif action == 'password':
             old_password = request.form.get('old_password', '')

@@ -699,7 +699,7 @@ button {
 
 .input-wrapper input {
     width: 100%;
-    padding: 13px 44px 13px 50px !important;
+    padding: 11px 14px 11px 42px;
     font-size: 0.9rem;
     font-family: inherit;
     color: var(--gray-800);
@@ -1692,7 +1692,7 @@ td, th { padding: 13px 15px; font-size: .92rem; }
 .login-panel .auth-form { gap:23px; }
 .login-panel .form-group { gap:9px; }
 .login-panel .form-group label { color:#d6e5f2; font-size:.92rem; }
-.login-panel .input-wrapper input { min-height:56px; padding:14px 48px 14px 52px !important; border-color:rgba(139,185,204,.2); border-radius:12px; background:rgba(4,17,31,.75); color:#edf6fc; font-size:.97rem; }
+.login-panel .input-wrapper input { min-height:56px; padding-top:14px; padding-bottom:14px; border-color:rgba(139,185,204,.2); border-radius:12px; background:rgba(4,17,31,.75); color:#edf6fc; font-size:.97rem; }
 .login-panel .input-wrapper input:focus { border-color:#48caba; background:rgba(4,17,31,.9); box-shadow:0 0 0 4px rgba(45,212,191,.12); }
 .login-panel .toggle-password { min-width:42px; min-height:42px; }
 .login-panel .btn-full { min-height:56px; margin-top:4px; border-radius:12px; font-size:1rem; }
@@ -1832,43 +1832,4 @@ td, th { padding: 13px 15px; font-size: .92rem; }
     .register-layout .role-card svg { grid-row:span 2; margin:0; }
     .register-layout .role-card small { grid-column:2; }
     .register-layout .doctor-fields:not([hidden]) { grid-template-columns:1fr; padding:14px; }
-}
-
-
-/* ============================================================
-   ZERO ICON-PLACEHOLDER OVERLAP (Login, Register & Auth)
-   ============================================================ */
-.input-wrapper {
-    position: relative !important;
-    display: flex !important;
-    align-items: center !important;
-    width: 100% !important;
-}
-
-.input-wrapper svg,
-.input-wrapper [data-lucide] {
-    position: absolute !important;
-    left: 16px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    width: 20px !important;
-    height: 20px !important;
-    color: #7dd3fc !important;
-    pointer-events: none !important;
-    z-index: 5 !important;
-}
-
-.input-wrapper input,
-.login-panel .input-wrapper input,
-.auth-form .input-wrapper input,
-.register-layout .input-wrapper input,
-.register-layout .form-group .input-wrapper input:not([type="checkbox"]):not([type="radio"]):not([type="file"]) {
-    padding-left: 54px !important;
-    padding-right: 48px !important;
-    text-indent: 0 !important;
-}
-
-.input-wrapper input::placeholder {
-    color: #7d96af !important;
-    opacity: 0.9 !important;
 }

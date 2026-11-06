@@ -48,84 +48,17 @@ def init_db():
         ):
             if name not in existing:
                 conn.execute(f"ALTER TABLE prescriptions ADD COLUMN {name} {definition}")
-
         medicine_columns = {row[1] for row in conn.execute("PRAGMA table_info(medicines)").fetchall()}
-        for name, definition in (
-            ("prescription_id", "INTEGER"),
-            ("batch_number", "TEXT"),
-            ("manufacturing_date", "DATE"),
-            ("before_after_food", "TEXT DEFAULT 'Take after meals with water.'")
-        ):
+        for name, definition in (("prescription_id", "INTEGER"), ("batch_number", "TEXT"), ("manufacturing_date", "DATE")):
             if name not in medicine_columns:
                 conn.execute(f"ALTER TABLE medicines ADD COLUMN {name} {definition}")
-
-        user_columns = {row[1] for row in conn.execute("PRAGMA table_info(users)").fetchall()}
-        for name, definition in (("language", "TEXT DEFAULT 'en'"), ("auto_camera", "INTEGER DEFAULT 1")):
-            if name not in user_columns:
-                conn.execute(f"ALTER TABLE users ADD COLUMN {name} {definition}")
-
-        # Seed initial demo accounts if not present
-        try:
-            from werkzeug.security import generate_password_hash
-            pw_hash = generate_password_hash("password123")
-            
-            p_user = conn.execute("SELECT id FROM users WHERE username = 'patient_demo'").fetchone()
-            if not p_user:
-                conn.execute(
-                    "INSERT INTO users (username, email, password_hash, full_name, role, language, auto_camera) VALUES (?, ?, ?, ?, 'patient', 'en', 1)",
-                    ("patient_demo", "patient@example.com", pw_hash, "Ramesh Sharma")
-                )
-                pid = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
-                conn.execute("INSERT OR IGNORE INTO patient_profiles (user_id) VALUES (?)", (pid,))
-
-            d_user = conn.execute("SELECT id FROM users WHERE username = 'doctor_demo'").fetchone()
-            if not d_user:
-                conn.execute(
-                    "INSERT INTO users (username, email, password_hash, full_name, role, language, auto_camera) VALUES (?, ?, ?, ?, 'doctor', 'en', 1)",
-                    ("doctor_demo", "doctor@example.com", pw_hash, "Dr. Ananya Roy")
-                )
-                did = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
-                conn.execute("INSERT OR IGNORE INTO doctor_profiles (user_id, specialty, license_number, verification_status) VALUES (?, 'Cardiologist', 'MCI-48291', 'verified')", (did,))
-
-            a_user = conn.execute("SELECT id FROM users WHERE username = 'admin_demo'").fetchone()
-            if not a_user:
-                conn.execute(
-                    "INSERT INTO users (username, email, password_hash, full_name, role, language, auto_camera) VALUES (?, ?, ?, ?, 'admin', 'en', 1)",
-                    ("admin_demo", "admin@example.com", pw_hash, "Administrator")
-                )
-
-            c_user = conn.execute("SELECT id FROM users WHERE username = 'caregiver_demo'").fetchone()
-            if not c_user:
-                conn.execute(
-                    "INSERT INTO users (username, email, password_hash, full_name, role, language, auto_camera) VALUES (?, ?, ?, ?, 'caregiver', 'en', 1)",
-                    ("caregiver_demo", "caregiver@example.com", pw_hash, "Priya Sharma")
-                )
-        except Exception as ue:
-            print(f"[DB] Demo user init skipped: {ue}")
-
         conn.commit()
-
-        # Seed comprehensive Indian medicine database if needed
-        cur = conn.execute("SELECT COUNT(*) FROM medicine_database")
-        med_count = cur.fetchone()[0]
-        needs_seed = (med_count < 170)
-        conn.close()
-        conn = None
-
-        if needs_seed:
-            try:
-                from database.seed_indian_medicines import seed_indian_medicines
-                seed_indian_medicines(get_db_path())
-            except Exception as se:
-                print(f"[DB] Supplemental medicine seeding skipped/deferred: {se}")
-
         print("[DB] Database initialized successfully.")
     except Exception as e:
         print(f"[DB] Error initializing database: {e}")
-        # Non-fatal error during init so server never fails to boot
+        raise
     finally:
-        if conn:
-            conn.close()
+        conn.close()
 
 
 def query_db(query, args=(), one=False):

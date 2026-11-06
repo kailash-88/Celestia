@@ -7,10 +7,8 @@ CREATE TABLE IF NOT EXISTS users (
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     full_name TEXT NOT NULL,
-    role TEXT NOT NULL DEFAULT 'patient',  -- 'patient', 'doctor', 'caregiver', 'admin', 'pharmacist'
+    role TEXT NOT NULL DEFAULT 'patient',  -- 'patient' or 'caregiver'
     phone TEXT,
-    language TEXT DEFAULT 'en',
-    auto_camera INTEGER DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -66,7 +64,6 @@ CREATE TABLE IF NOT EXISTS medicines (
     quantity INTEGER DEFAULT 0,
     image_path TEXT,
     prescription_id INTEGER,
-    before_after_food TEXT DEFAULT 'Take after meals with water.',
     source TEXT DEFAULT 'manual',  -- 'manual', 'scan', 'prescription'
     verified INTEGER DEFAULT 0,    -- human-confirmed flag
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

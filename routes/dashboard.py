@@ -21,27 +21,16 @@ dashboard_bp = Blueprint('dashboard', __name__)
 def index():
     """Main dashboard view."""
     user = get_current_user()
-    if not user:
-        session.clear()
-        flash('Your session has expired. Please log in again.', 'warning')
-        return redirect(url_for('auth.login'))
-
-    if user["role"] == "doctor":
+    if user and user["role"] == "doctor":
         return redirect(url_for("doctor.index"))
-    if user["role"] == "admin":
+    if user and user["role"] == "admin":
         return redirect(url_for("admin.index"))
-    if user["role"] == "caregiver":
+    if user and user["role"] == "caregiver":
         return redirect(url_for("caregiver.index"))
-    if user["role"] == "pharmacist":
+    if user and user["role"] == "pharmacist":
         return redirect(url_for("pharmacy.index"))
 
-    user_id = user['id']
-
-    # If patient has auto-camera enabled and hasn't explicitly selected the dashboard view,
-    # open the camera scanner directly.
-    auto_cam_pref = session.get('auto_camera', user['auto_camera'] if 'auto_camera' in user.keys() else 1)
-    if user['role'] == 'patient' and auto_cam_pref == 1 and request.args.get('view') != 'dashboard':
-        return redirect(url_for('scanner.medicine_scan', autocamera=1))
+    user_id = session['user_id']
 
     # Gather dashboard stats
     medicine_count = query_db(
@@ -80,12 +69,6 @@ def index():
 
     # Patient profile & emergency contact
     profile = query_db("SELECT * FROM patient_profiles WHERE user_id = ?", [user_id], one=True)
-    if not profile:
-        try:
-            execute_db("INSERT OR IGNORE INTO patient_profiles (user_id) VALUES (?)", [user_id])
-            profile = query_db("SELECT * FROM patient_profiles WHERE user_id = ?", [user_id], one=True)
-        except Exception:
-            profile = None
 
     # Caregiver link status
     caregiver = query_db(
@@ -102,33 +85,17 @@ def index():
     )
 
     # Today's detailed schedule with dose log status
-    try:
-        today_schedule = query_db(
-            """SELECT dl.id as log_id, dl.status, dl.scheduled_for, dl.taken_at,
-                      s.id as schedule_id, s.time_of_day, s.scheduled_time, s.dosage_amount, s.instructions,
-                      m.name as medicine_name, m.form as medicine_form, m.before_after_food
-            FROM schedules s
-            JOIN medicines m ON s.medicine_id = m.id
-            LEFT JOIN dose_logs dl ON dl.schedule_id = s.id AND DATE(dl.scheduled_for) = DATE('now')
-            WHERE s.user_id = ? AND s.is_active = 1
-            ORDER BY s.scheduled_time ASC""",
-            [user_id]
-        )
-    except Exception:
-        try:
-            today_schedule = query_db(
-                """SELECT dl.id as log_id, dl.status, dl.scheduled_for, dl.taken_at,
-                          s.id as schedule_id, s.time_of_day, s.scheduled_time, s.dosage_amount, s.instructions,
-                          m.name as medicine_name, m.form as medicine_form, 'Take after meals' as before_after_food
-                FROM schedules s
-                JOIN medicines m ON s.medicine_id = m.id
-                LEFT JOIN dose_logs dl ON dl.schedule_id = s.id AND DATE(dl.scheduled_for) = DATE('now')
-                WHERE s.user_id = ? AND s.is_active = 1
-                ORDER BY s.scheduled_time ASC""",
-                [user_id]
-            )
-        except Exception:
-            today_schedule = []
+    today_schedule = query_db(
+        """SELECT dl.id as log_id, dl.status, dl.scheduled_for, dl.taken_at,
+                  s.id as schedule_id, s.time_of_day, s.scheduled_time, s.dosage_amount, s.instructions,
+                  m.name as medicine_name, m.form as medicine_form, m.before_after_food
+        FROM schedules s
+        JOIN medicines m ON s.medicine_id = m.id
+        LEFT JOIN dose_logs dl ON dl.schedule_id = s.id AND DATE(dl.scheduled_for) = DATE('now')
+        WHERE s.user_id = ? AND s.is_active = 1
+        ORDER BY s.scheduled_time ASC""",
+        [user_id]
+    )
 
     # Upcoming doctor consultations / answered queries
     recent_doctor_advice = query_db(

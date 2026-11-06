@@ -96,21 +96,6 @@
                 </div>
             </div>
 
-            <!-- Language Selection Option -->
-            <div class="form-group" style="margin-top: 14px;">
-                <label for="language" style="display:flex; align-items:center; gap:6px;">
-                    <i data-lucide="languages" style="width:16px;height:16px;color:#38bdf8;"></i> Preferred Voice &amp; Display Language
-                </label>
-                <div>
-                    <select id="language" name="language" style="width:100%; min-height:48px; padding: 10px 14px; border-radius:12px; background:rgba(4,17,31,.82); color:#eff7fc; border:1px solid rgba(133,184,201,.25); font-size:0.95rem;">
-                        <option value="en">🇬🇧 English</option>
-                        <option value="hi">🇮🇳 हिन्दी (Hindi)</option>
-                        <option value="ta">🇮🇳 தமிழ் (Tamil)</option>
-                    </select>
-                </div>
-                <small style="color:#94a3b8; font-size:0.8rem; margin-top:4px; display:block;">AI voice explanations and medicine guides will automatically speak in your selected language.</small>
-            </div>
-
             <div class="doctor-fields" id="doctorFields" hidden>
                 <p class="text-muted">Doctor accounts stay pending until an administrator verifies the professional details.</p>
                 <div class="form-group"><label for="specialty">Specialty *</label><select id="specialty" name="specialty"><option value="">Choose specialty</option>{% for item in ['General Medicine','Cardiology','Dermatology','Neurology','Orthopedics','Pediatrics','Gynecology','Endocrinology','Gastroenterology','Psychiatry','Pulmonology'] %}<option>{{ item }}</option>{% endfor %}</select></div>
@@ -123,7 +108,7 @@
                 <div class="form-group"><label for="pharmacy_license">Pharmacy registration number *</label><input id="pharmacy_license" name="pharmacy_license" maxlength="100"></div>
             </div>
 
-            <button type="submit" class="btn btn-primary btn-full" style="margin-top:16px;">
+            <button type="submit" class="btn btn-primary btn-full">
                 <i data-lucide="user-plus"></i>
                 <span>Create Account</span>
             </button>
