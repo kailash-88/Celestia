@@ -105,6 +105,7 @@ def create_app(config_class=None):
 
 # Module-level application instance for WSGI servers (Gunicorn, Render, etc.)
 app = create_app()
+application = app
 
 if __name__ == '__main__':
     import os
