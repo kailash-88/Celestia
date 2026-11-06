@@ -236,3 +236,60 @@ def assign_prescription(prescription_id):
         flash("Prescription assigned to doctor for clinical review.", "success")
 
     return redirect(url_for("admin.index"))
+
+
+# ==============================================================
+# F. App Updates & SMS / Push Broadcast Engine
+# ==============================================================
+@admin_bp.route("/releases", methods=["GET", "POST"])
+@role_required("admin")
+def releases():
+    if request.method == "POST":
+        version_code = request.form.get("version_code", type=int)
+        version_name = request.form.get("version_name", "").strip()
+        release_notes = request.form.get("release_notes", "").strip()
+        force_update = 1 if request.form.get("force_update") == "1" else 0
+        download_url = request.form.get("download_url", "").strip() or "https://play.google.com/store/apps/details?id=com.medimitra.app"
+        send_sms = request.form.get("send_sms") == "1"
+
+        if not version_code or not version_name:
+            flash("Version code and version name are required.", "error")
+            return redirect(url_for("admin.releases"))
+
+        # 1. Insert release into database
+        execute_db(
+            """INSERT INTO app_releases (version_code, version_name, release_notes, force_update, download_url, released_by)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            [version_code, version_name, release_notes, force_update, download_url, session["user_id"]]
+        )
+
+        # 2. Broadcast in-app notification to all users
+        all_users = query_db("SELECT id, phone, full_name FROM users WHERE is_active = 1")
+        sms_count = 0
+        title = f"🚀 New MediMitra Update (v{version_name})"
+        msg = f"A new version of MediMitra (v{version_name}) is available. {release_notes}"
+
+        for u in all_users:
+            execute_db(
+                "INSERT INTO notifications (user_id, title, message, notification_type) VALUES (?, ?, ?, 'update')",
+                [u["id"], title, msg]
+            )
+            if send_sms and u["phone"]:
+                sms_count += 1
+
+        # 3. Update SMS broadcast count
+        execute_db(
+            "UPDATE app_releases SET sms_broadcast_count = ? WHERE version_code = ?",
+            [sms_count, version_code]
+        )
+
+        execute_db(
+            "INSERT INTO system_logs (user_id, event_type, status, details) VALUES (?, 'app_update_broadcast', 'success', ?)",
+            [session["user_id"], f"Broadcasted v{version_name} (code {version_code}) to {len(all_users)} users ({sms_count} SMS)"]
+        )
+
+        flash(f"Update v{version_name} published! In-app alerts sent to {len(all_users)} users and {sms_count} SMS queued.", "success")
+        return redirect(url_for("admin.releases"))
+
+    all_releases = query_db("SELECT * FROM app_releases ORDER BY version_code DESC")
+    return render_template("admin_releases.html", releases=all_releases)

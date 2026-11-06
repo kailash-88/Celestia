@@ -17,3 +17,6 @@ requests==2.32.3
 
 # Utilities
 APScheduler==3.10.4
+
+# Production WSGI Server for 24/7 Cloud Hosting
+gunicorn==23.0.0

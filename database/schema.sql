@@ -206,3 +206,29 @@ CREATE TABLE IF NOT EXISTS system_logs (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+
+-- App Releases and In-App / SMS Update Broadcasts
+CREATE TABLE IF NOT EXISTS app_releases (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    version_code INTEGER NOT NULL,
+    version_name TEXT NOT NULL,
+    release_notes TEXT NOT NULL,
+    force_update INTEGER DEFAULT 0,
+    download_url TEXT,
+    released_by INTEGER,
+    sms_broadcast_count INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (released_by) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    message TEXT NOT NULL,
+    notification_type TEXT DEFAULT 'system',
+    is_read INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);

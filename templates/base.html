@@ -143,6 +143,7 @@
                 <li><a href="{{ url_for('admin.index') }}" class="nav-link {% if request.endpoint == 'admin.index' %}active{% endif %}"><i data-lucide="layout-grid"></i><span>Admin Overview</span></a></li>
                 <li><a href="{{ url_for('admin.users') }}" class="nav-link {% if request.endpoint == 'admin.users' %}active{% endif %}"><i data-lucide="users"></i><span>User Management</span></a></li>
                 <li><a href="{{ url_for('admin.medicines') }}" class="nav-link {% if request.endpoint == 'admin.medicines' %}active{% endif %}"><i data-lucide="database"></i><span>Medicine Database</span></a></li>
+                <li><a href="{{ url_for('admin.releases') }}" class="nav-link {% if request.endpoint == 'admin.releases' %}active{% endif %}"><i data-lucide="radio"></i><span>App Releases &amp; SMS</span></a></li>
                 <li><a href="{{ url_for('admin.index') }}#verification" class="nav-link"><i data-lucide="user-check"></i><span>Doctor Verification</span></a></li>
                 <li><a href="{{ url_for('admin.index') }}#logs" class="nav-link"><i data-lucide="activity"></i><span>System &amp; AI Logs</span></a></li>
 
@@ -151,8 +152,10 @@
                 <li><a href="{{ url_for('pharmacy.index') }}" class="nav-link {% if request.endpoint and 'pharmacy' in request.endpoint %}active{% endif %}"><i data-lucide="store"></i><span>Pharmacy Overview</span></a></li>
                 {% endif %}
 
-                <li class="nav-section-label"><span>Account</span></li>
+                <li class="nav-section-label"><span>Account &amp; Legal</span></li>
                 <li><a href="{{ url_for('auth.settings') }}" class="nav-link {% if request.endpoint and 'settings' in request.endpoint %}active{% endif %}"><i data-lucide="settings"></i><span>Settings</span></a></li>
+                <li><a href="{{ url_for('api.privacy_policy') }}" class="nav-link"><i data-lucide="shield-check"></i><span>Privacy Policy</span></a></li>
+                <li><a href="{{ url_for('api.terms_of_service') }}" class="nav-link"><i data-lucide="file-text"></i><span>Terms of Service</span></a></li>
             </ul>
         </nav>
 

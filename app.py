@@ -42,6 +42,7 @@ def create_app(config_class=None):
     from routes.assistant import assistant_bp
     from routes.queries import queries_bp
     from routes.records import records_bp
+    from routes.api import api_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -58,6 +59,7 @@ def create_app(config_class=None):
     app.register_blueprint(assistant_bp)
     app.register_blueprint(queries_bp)
     app.register_blueprint(records_bp)
+    app.register_blueprint(api_bp)
 
     @app.cli.command("create-admin")
     def create_admin_command():

@@ -124,6 +124,9 @@ public class MainActivity extends AppCompatActivity {
 
         // Load the server URL
         loadMediMitra();
+
+        // Check for latest updates on launch
+        checkForAppUpdates();
     }
 
     // App Runtime Permissions Request (Camera & Voice Audio)
@@ -384,6 +387,62 @@ public class MainActivity extends AppCompatActivity {
         String url = getServerUrl();
         tvCurrentUrl.setText("Attempting to connect: " + url);
         webView.loadUrl(url);
+    }
+
+    private void checkForAppUpdates() {
+        new Thread(() -> {
+            try {
+                String serverUrl = getServerUrl();
+                java.net.URL url = new java.net.URL(serverUrl + "/api/app/version");
+                java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+                conn.setConnectTimeout(4000);
+                conn.setReadTimeout(4000);
+                conn.setRequestMethod("GET");
+                if (conn.getResponseCode() == 200) {
+                    java.io.InputStream in = conn.getInputStream();
+                    java.util.Scanner s = new java.util.Scanner(in).useDelimiter("\\A");
+                    String resp = s.hasNext() ? s.next() : "";
+                    org.json.JSONObject json = new org.json.JSONObject(resp);
+                    int latestCode = json.optInt("latest_version_code", 1);
+                    String latestName = json.optString("latest_version_name", "1.0.0");
+                    String releaseNotes = json.optString("release_notes", "");
+                    boolean force = json.optBoolean("force_update", false);
+                    String playStoreUrl = json.optString("play_store_url", "https://play.google.com/store/apps/details?id=com.medimitra.app");
+
+                    int currentCode = 1;
+                    try {
+                        currentCode = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
+                    } catch (Exception ignored) {}
+
+                    if (latestCode > currentCode) {
+                        runOnUiThread(() -> showUpdateDialog(latestName, releaseNotes, playStoreUrl, force));
+                    }
+                }
+            } catch (Exception ignored) {
+            }
+        }).start();
+    }
+
+    private void showUpdateDialog(String versionName, String releaseNotes, String playStoreUrl, boolean force) {
+        if (isFinishing() || isDestroyed()) return;
+        AlertDialog.Builder builder = new AlertDialog.Builder(this)
+                .setTitle("🚀 New MediMitra Update (v" + versionName + ")")
+                .setMessage("A new update is available on Google Play!\n\n" + releaseNotes)
+                .setPositiveButton("Update Now", (dialog, which) -> {
+                    try {
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + getPackageName())));
+                    } catch (Exception e) {
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(playStoreUrl)));
+                    }
+                    if (force) finish();
+                });
+
+        if (!force) {
+            builder.setNegativeButton("Later", (dialog, which) -> dialog.dismiss());
+        } else {
+            builder.setCancelable(false);
+        }
+        builder.show();
     }
 
     private void showError(boolean visible) {

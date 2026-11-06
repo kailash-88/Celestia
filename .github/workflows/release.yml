@@ -1,0 +1,110 @@
+name: MediMitra CI/CD Release Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: 'Version Name (e.g. 1.0.1)'
+        required: true
+        default: '1.0.1'
+      release_notes:
+        description: 'Release Notes'
+        required: false
+        default: 'Regular maintenance and stability improvements.'
+
+permissions:
+  contents: write
+
+jobs:
+  test-backend:
+    name: Test Python Flask Backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Run Backend Tests
+        run: |
+          pytest tests/ -v
+
+  build-android:
+    name: Build Android Packages (.aab & .apk)
+    needs: test-backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Grant Execute Permission to Gradlew
+        run: chmod +x android/gradlew
+
+      - name: Build Android App Bundle (.aab for Google Play Store)
+        run: |
+          cd android
+          ./gradlew bundleDebug
+
+      - name: Build Standalone Android APK (.apk for Direct Mobile Install)
+        run: |
+          cd android
+          ./gradlew assembleDebug
+
+      - name: Prepare Release Artifacts
+        id: prepare-artifacts
+        run: |
+          TAG_NAME="${{ github.ref_name }}"
+          if [ -z "$TAG_NAME" ] || [ "$TAG_NAME" = "main" ]; then
+            TAG_NAME="v${{ github.event.inputs.version_name || '1.0.0' }}"
+          fi
+          echo "TAG=$TAG_NAME" >> $GITHUB_ENV
+          
+          mkdir -p release_packages
+          cp android/app/build/outputs/bundle/debug/app-debug.aab release_packages/MediMitra-${TAG_NAME}.aab
+          cp android/app/build/outputs/apk/debug/app-debug.apk release_packages/MediMitra-${TAG_NAME}.apk
+
+      - name: Publish GitHub Release with Uniform Packages
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG }}
+          name: "MediMitra ${{ env.TAG }}"
+          body: |
+            ## MediMitra Healthcare Platform Release ${{ env.TAG }} 🩺💊
+            
+            ${{ github.event.inputs.release_notes || 'Automated uniform release built by MediMitra CI/CD Pipeline.' }}
+            
+            ### Included Packages:
+            - **`MediMitra-${{ env.TAG }}.aab`**: Official Android App Bundle for **Google Play Store Console**.
+            - **`MediMitra-${{ env.TAG }}.apk`**: Direct install package for Android mobile devices.
+            
+            ### Integrity & Verification:
+            - Verified against Python backend tests
+            - Compiled targeting Android API 35 (Android 15)
+            - Built with Obsidian Dark UI + GSAP 3D transitions & Voice AI Engine
+          files: |
+            release_packages/*.aab
+            release_packages/*.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
