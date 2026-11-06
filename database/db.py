@@ -59,6 +59,36 @@ def init_db():
             if name not in user_columns:
                 conn.execute(f"ALTER TABLE users ADD COLUMN {name} {definition}")
 
+        # Seed initial demo accounts if users table is empty
+        cur = conn.execute("SELECT COUNT(*) FROM users")
+        user_count = cur.fetchone()[0]
+        if user_count == 0:
+            try:
+                from werkzeug.security import generate_password_hash
+                pw_hash = generate_password_hash("password123")
+                conn.execute(
+                    "INSERT INTO users (username, email, password_hash, full_name, role, language, auto_camera) VALUES (?, ?, ?, ?, 'patient', 'en', 1)",
+                    ("patient_demo", "patient@example.com", pw_hash, "Ramesh Sharma")
+                )
+                pid = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+                conn.execute("INSERT OR IGNORE INTO patient_profiles (user_id) VALUES (?)", (pid,))
+                conn.execute(
+                    "INSERT INTO users (username, email, password_hash, full_name, role, language, auto_camera) VALUES (?, ?, ?, ?, 'doctor', 'en', 1)",
+                    ("doctor_demo", "doctor@example.com", pw_hash, "Dr. Ananya Roy")
+                )
+                did = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+                conn.execute("INSERT OR IGNORE INTO doctor_profiles (user_id, specialty, license_number, verification_status) VALUES (?, 'Cardiologist', 'MCI-48291', 'verified')", (did,))
+                conn.execute(
+                    "INSERT INTO users (username, email, password_hash, full_name, role, language, auto_camera) VALUES (?, ?, ?, ?, 'admin', 'en', 1)",
+                    ("admin_demo", "admin@example.com", pw_hash, "Administrator")
+                )
+                conn.execute(
+                    "INSERT INTO users (username, email, password_hash, full_name, role, language, auto_camera) VALUES (?, ?, ?, ?, 'caregiver', 'en', 1)",
+                    ("caregiver_demo", "caregiver@example.com", pw_hash, "Priya Sharma")
+                )
+            except Exception as ue:
+                print(f"[DB] Demo user init skipped: {ue}")
+
         conn.commit()
 
         # Seed comprehensive Indian medicine database if needed

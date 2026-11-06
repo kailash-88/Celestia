@@ -19,6 +19,11 @@ def login_required(f):
         if 'user_id' not in session:
             flash('Please log in to access this page.', 'warning')
             return redirect(url_for('auth.login'))
+        user = get_current_user()
+        if not user:
+            session.clear()
+            flash('Your session has expired. Please log in again.', 'warning')
+            return redirect(url_for('auth.login'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -32,13 +37,17 @@ def role_required(*roles):
                 flash('Please log in to access this page.', 'warning')
                 return redirect(url_for('auth.login'))
             user = get_current_user()
-            if not user or user['role'] not in roles:
+            if not user:
+                session.clear()
+                flash('Your session has expired. Please log in again.', 'warning')
+                return redirect(url_for('auth.login'))
+            if user['role'] not in roles:
                 flash('Camera scanning and access are reserved exclusively for Patient accounts.', 'error')
-                if user and user['role'] == 'doctor':
+                if user['role'] == 'doctor':
                     return redirect(url_for('doctor.index'))
-                if user and user['role'] == 'admin':
+                if user['role'] == 'admin':
                     return redirect(url_for('admin.index'))
-                if user and user['role'] == 'caregiver':
+                if user['role'] == 'caregiver':
                     return redirect(url_for('caregiver.index'))
                 return redirect(url_for('dashboard.index'))
             return f(*args, **kwargs)
