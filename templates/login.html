@@ -53,7 +53,30 @@
             </button>
         </form>
 
-        <div class="auth-footer">
+        <!-- Quick 1-Tap Demo Access -->
+        <div class="demo-quick-login" style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid rgba(148, 163, 184, 0.2); text-align: center;">
+            <p style="font-size: 0.8rem; font-weight: 600; color: #64748b; margin-bottom: 0.6rem;">
+                🚀 Quick Demo Access (1-Tap Login)
+            </p>
+            <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+                <button type="button" class="btn btn-outline btn-sm" onclick="quickFill('patient_demo', 'password123')" style="font-size: 0.8rem; padding: 0.4rem 0.75rem; cursor: pointer;">
+                    👤 Ramesh Sharma (Patient)
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="quickFill('doctor_demo', 'password123')" style="font-size: 0.8rem; padding: 0.4rem 0.75rem; cursor: pointer;">
+                    🩺 Doctor
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="quickFill('caregiver_demo', 'password123')" style="font-size: 0.8rem; padding: 0.4rem 0.75rem; cursor: pointer;">
+                    🤝 Caregiver
+                </button>
+            </div>
+            <div style="margin-top: 0.75rem;">
+                <a href="{{ url_for('auth.reset_session') }}" style="font-size: 0.75rem; color: #94a3b8; text-decoration: underline;">
+                    🔄 Reset App Cache &amp; Session
+                </a>
+            </div>
+        </div>
+
+        <div class="auth-footer" style="margin-top: 1rem;">
             <p>Don't have an account? <a href="{{ url_for('auth.register') }}">Create one</a></p>
         </div>
     </section>
@@ -72,6 +95,16 @@
             btn.innerHTML = '<i data-lucide="eye"></i>';
         }
         lucide.createIcons();
+    }
+
+    function quickFill(u, p) {
+        const uInput = document.getElementById('username');
+        const pInput = document.getElementById('password');
+        if (uInput && pInput) {
+            uInput.value = u;
+            pInput.value = p;
+            document.getElementById('loginForm').submit();
+        }
     }
 </script>
 {% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}System Notice – MediMitra{% endblock %}
+
+{% block content %}
+<div style="max-width: 520px; margin: 4rem auto; padding: 2rem; background: var(--bg-card, #ffffff); border-radius: 1rem; box-shadow: 0 4px 20px rgba(0,0,0,0.08); text-align: center;">
+    <div style="width: 64px; height: 64px; margin: 0 auto 1.5rem; background: #fee2e2; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #dc2626; font-size: 1.75rem;">
+        <i data-lucide="alert-triangle"></i>
+    </div>
+    <h2 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem;">Temporary Connection Refresh</h2>
+    <p style="color: #64748b; font-size: 0.95rem; line-height: 1.6; margin-bottom: 2rem;">
+        Your session or network connection is being refreshed. Tap below to safely re-open your MediMitra portal.
+    </p>
+    <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+        <a href="{{ url_for('auth.reset_session') }}" class="btn btn-primary" style="padding: 0.75rem 1.5rem; font-weight: 600;">
+            <i data-lucide="refresh-cw"></i>
+            <span>Refresh &amp; Go to Login</span>
+        </a>
+        <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline" style="padding: 0.75rem 1.5rem;">
+            <span>Go to Dashboard</span>
+        </a>
+    </div>
+</div>
+{% endblock %}

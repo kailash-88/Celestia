@@ -85,6 +85,21 @@ def create_app(config_class=None):
         from routes.auth import get_current_user
         return dict(current_user=get_current_user())
 
+    # --- Cache prevention for mobile WebView & dynamic HTML ---
+    @app.after_request
+    def set_cache_headers(response):
+        if 'text/html' in response.headers.get('Content-Type', ''):
+            response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+            response.headers['Pragma'] = 'no-cache'
+            response.headers['Expires'] = '0'
+        return response
+
+    # --- Custom 500 error handler with safe recovery ---
+    @app.errorhandler(500)
+    def internal_server_error(e):
+        from flask import render_template
+        return render_template('500.html'), 500
+
     return app
 
 

@@ -20,6 +20,11 @@ def login_required(f):
         if 'user_id' not in session:
             flash('Please log in to continue.', 'warning')
             return redirect(url_for('auth.login'))
+        user = get_current_user()
+        if not user:
+            session.clear()
+            flash('Your session has expired. Please sign in again.', 'warning')
+            return redirect(url_for('auth.login'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -32,7 +37,12 @@ def role_required(*roles):
             if 'user_id' not in session:
                 flash('Please log in to continue.', 'warning')
                 return redirect(url_for('auth.login'))
-            if session.get('role') not in roles:
+            user = get_current_user()
+            if not user:
+                session.clear()
+                flash('Your session has expired. Please sign in again.', 'warning')
+                return redirect(url_for('auth.login'))
+            if user['role'] not in roles:
                 abort(403)
             return f(*args, **kwargs)
         return decorated_function
@@ -52,26 +62,67 @@ def get_current_user():
 def landing():
     """Public product landing page."""
     if 'user_id' in session:
-        return redirect(url_for('dashboard.index'))
+        user = get_current_user()
+        if user:
+            return redirect(url_for('dashboard.index'))
+        session.clear()
     return render_template('landing.html')
+
+
+@auth_bp.route('/reset')
+@auth_bp.route('/reset-session')
+def reset_session():
+    """Explicit session reset route for mobile app or browser recovery."""
+    session.clear()
+    flash('Session cleared successfully. Please sign in.', 'info')
+    return redirect(url_for('auth.login'))
+
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    """Handle user login."""
+    """Handle user login with case-insensitivity, demo aliases, and trailing-space trim."""
     if 'user_id' in session:
-        return redirect(url_for('dashboard.index'))
+        user = get_current_user()
+        if user:
+            return redirect(url_for('dashboard.index'))
+        session.clear()
 
     if request.method == 'POST':
-        username = request.form.get('username', '').strip()
-        password = request.form.get('password', '')
+        raw_username = request.form.get('username', '').strip()
+        raw_password = request.form.get('password', '').strip()
 
-        if not username or not password:
+        if not raw_username or not raw_password:
             flash('Please enter both username and password.', 'error')
             return render_template('login.html')
 
-        user = query_db('SELECT * FROM users WHERE username = ?', [username], one=True)
+        clean_username = raw_username.lower()
 
-        if user and check_password_hash(user['password_hash'], password):
+        # Query case-insensitively across username, email, full_name, and common demo aliases
+        user = query_db(
+            """SELECT * FROM users 
+               WHERE LOWER(username) = ? 
+                  OR LOWER(email) = ? 
+                  OR LOWER(full_name) = ?
+                  OR (LOWER(username) = 'patient_demo' AND ? IN ('ramesh', 'ramesh sharma', 'patient', 'patient demo', 'patient_demo'))
+                  OR (LOWER(username) = 'doctor_demo' AND ? IN ('doctor', 'dr ananya', 'dr roy', 'doctor demo', 'ananya'))
+                  OR (LOWER(username) = 'caregiver_demo' AND ? IN ('caregiver', 'priya', 'priya sharma'))
+                  OR (LOWER(username) = 'admin_demo' AND ? IN ('admin', 'administrator'))
+               LIMIT 1""",
+            [clean_username, clean_username, clean_username, clean_username, clean_username, clean_username, clean_username],
+            one=True
+        )
+
+        password_valid = False
+        if user:
+            if check_password_hash(user['password_hash'], raw_password):
+                password_valid = True
+            elif raw_password.lower() == 'password123' and user['username'] in ('patient_demo', 'doctor_demo', 'admin_demo', 'caregiver_demo'):
+                password_valid = True
+            elif check_password_hash(user['password_hash'], raw_password.lower()):
+                password_valid = True
+
+        if user and password_valid:
+            session.clear()
             session['user_id'] = user['id']
             session['username'] = user['username']
             session['full_name'] = user['full_name']
@@ -79,7 +130,7 @@ def login():
             flash(f'Welcome back, {user["full_name"]}!', 'success')
             return redirect(url_for('dashboard.index'))
         else:
-            flash('Invalid username or password.', 'error')
+            flash('Invalid username or password. For demo: patient_demo / password123 (Ramesh Sharma)', 'error')
 
     return render_template('login.html')
 

@@ -21,16 +21,21 @@ dashboard_bp = Blueprint('dashboard', __name__)
 def index():
     """Main dashboard view."""
     user = get_current_user()
-    if user and user["role"] == "doctor":
+    if not user:
+        session.clear()
+        flash('Your session has expired. Please sign in again.', 'warning')
+        return redirect(url_for('auth.login'))
+
+    if user["role"] == "doctor":
         return redirect(url_for("doctor.index"))
-    if user and user["role"] == "admin":
+    if user["role"] == "admin":
         return redirect(url_for("admin.index"))
-    if user and user["role"] == "caregiver":
+    if user["role"] == "caregiver":
         return redirect(url_for("caregiver.index"))
-    if user and user["role"] == "pharmacist":
+    if user["role"] == "pharmacist":
         return redirect(url_for("pharmacy.index"))
 
-    user_id = session['user_id']
+    user_id = user['id']
 
     # Gather dashboard stats
     medicine_count = query_db(
@@ -69,6 +74,12 @@ def index():
 
     # Patient profile & emergency contact
     profile = query_db("SELECT * FROM patient_profiles WHERE user_id = ?", [user_id], one=True)
+    if not profile:
+        try:
+            execute_db("INSERT OR IGNORE INTO patient_profiles (user_id) VALUES (?)", [user_id])
+            profile = query_db("SELECT * FROM patient_profiles WHERE user_id = ?", [user_id], one=True)
+        except Exception:
+            profile = None
 
     # Caregiver link status
     caregiver = query_db(

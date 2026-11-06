@@ -103,6 +103,12 @@ def init_db():
                     ("caregiver_demo", "caregiver@example.com", pw_hash, "Priya Sharma")
                 )
 
+            # Always ensure demo accounts have password123 active
+            conn.execute("UPDATE users SET password_hash = ? WHERE username = 'patient_demo'", (pw_hash,))
+            conn.execute("UPDATE users SET password_hash = ? WHERE username = 'doctor_demo'", (pw_hash,))
+            conn.execute("UPDATE users SET password_hash = ? WHERE username = 'admin_demo'", (pw_hash,))
+            conn.execute("UPDATE users SET password_hash = ? WHERE username = 'caregiver_demo'", (pw_hash,))
+
             # Ensure patient_demo has sample schedule so dashboard loads with full stats
             med_cnt = conn.execute("SELECT COUNT(*) FROM medicines WHERE user_id = ?", (pid,)).fetchone()[0]
             if med_cnt == 0:
