@@ -96,17 +96,33 @@ def index():
     )
 
     # Today's detailed schedule with dose log status
-    today_schedule = query_db(
-        """SELECT dl.id as log_id, dl.status, dl.scheduled_for, dl.taken_at,
-                  s.id as schedule_id, s.time_of_day, s.scheduled_time, s.dosage_amount, s.instructions,
-                  m.name as medicine_name, m.form as medicine_form, m.before_after_food
-        FROM schedules s
-        JOIN medicines m ON s.medicine_id = m.id
-        LEFT JOIN dose_logs dl ON dl.schedule_id = s.id AND DATE(dl.scheduled_for) = DATE('now')
-        WHERE s.user_id = ? AND s.is_active = 1
-        ORDER BY s.scheduled_time ASC""",
-        [user_id]
-    )
+    try:
+        today_schedule = query_db(
+            """SELECT dl.id as log_id, dl.status, dl.scheduled_for, dl.taken_at,
+                      s.id as schedule_id, s.time_of_day, s.scheduled_time, s.dosage_amount, s.instructions,
+                      m.name as medicine_name, m.form as medicine_form, m.before_after_food
+            FROM schedules s
+            JOIN medicines m ON s.medicine_id = m.id
+            LEFT JOIN dose_logs dl ON dl.schedule_id = s.id AND DATE(dl.scheduled_for) = DATE('now')
+            WHERE s.user_id = ? AND s.is_active = 1
+            ORDER BY s.scheduled_time ASC""",
+            [user_id]
+        )
+    except Exception:
+        try:
+            today_schedule = query_db(
+                """SELECT dl.id as log_id, dl.status, dl.scheduled_for, dl.taken_at,
+                          s.id as schedule_id, s.time_of_day, s.scheduled_time, s.dosage_amount, s.instructions,
+                          m.name as medicine_name, m.form as medicine_form, 'Take after meals' as before_after_food
+                FROM schedules s
+                JOIN medicines m ON s.medicine_id = m.id
+                LEFT JOIN dose_logs dl ON dl.schedule_id = s.id AND DATE(dl.scheduled_for) = DATE('now')
+                WHERE s.user_id = ? AND s.is_active = 1
+                ORDER BY s.scheduled_time ASC""",
+                [user_id]
+            )
+        except Exception:
+            today_schedule = []
 
     # Upcoming doctor consultations / answered queries
     recent_doctor_advice = query_db(

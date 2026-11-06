@@ -66,6 +66,7 @@ CREATE TABLE IF NOT EXISTS medicines (
     quantity INTEGER DEFAULT 0,
     image_path TEXT,
     prescription_id INTEGER,
+    before_after_food TEXT DEFAULT 'Take after meals with water.',
     source TEXT DEFAULT 'manual',  -- 'manual', 'scan', 'prescription'
     verified INTEGER DEFAULT 0,    -- human-confirmed flag
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

@@ -50,7 +50,12 @@ def init_db():
                 conn.execute(f"ALTER TABLE prescriptions ADD COLUMN {name} {definition}")
 
         medicine_columns = {row[1] for row in conn.execute("PRAGMA table_info(medicines)").fetchall()}
-        for name, definition in (("prescription_id", "INTEGER"), ("batch_number", "TEXT"), ("manufacturing_date", "DATE")):
+        for name, definition in (
+            ("prescription_id", "INTEGER"),
+            ("batch_number", "TEXT"),
+            ("manufacturing_date", "DATE"),
+            ("before_after_food", "TEXT DEFAULT 'Take after meals with water.'")
+        ):
             if name not in medicine_columns:
                 conn.execute(f"ALTER TABLE medicines ADD COLUMN {name} {definition}")
 
