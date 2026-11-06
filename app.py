@@ -79,11 +79,23 @@ def create_app(config_class=None):
                    [username,email,generate_password_hash(password),full_name])
         click.echo("Administrator account created.")
 
-    # --- Context processor: inject user into all templates ---
+    # --- Context processor: inject user & multilingual translations into all templates ---
     @app.context_processor
     def inject_globals():
+        from flask import session
         from routes.auth import get_current_user
-        return dict(current_user=get_current_user())
+        from services.translations import get_translation
+
+        user = get_current_user()
+        user_lang = user['language'] if (user and 'language' in user.keys()) else 'en'
+        lang = session.get('language') or user_lang or 'en'
+        if lang not in ('en', 'hi', 'ta'):
+            lang = 'en'
+
+        def t(key, default=None):
+            return get_translation(key, lang=lang, default=default)
+
+        return dict(current_user=user, current_lang=lang, t=t)
 
     # --- Global Exception & Error Handler ---
     @app.errorhandler(500)

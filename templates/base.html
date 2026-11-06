@@ -106,18 +106,13 @@
             <ul>
                 {% if current_user.role == 'patient' %}
                 <!-- 1. PATIENT DASHBOARD NAVIGATION -->
-                <li class="nav-section-label"><span>Patient Care</span></li>
-                <li><a href="{{ url_for('dashboard.index') }}" class="nav-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}"><i data-lucide="layout-dashboard"></i><span>Health Overview</span></a></li>
-                <li><a href="{{ url_for('scanner.medicine_scan') }}" class="nav-link {% if request.endpoint == 'scanner.medicine_scan' %}active{% endif %}"><i data-lucide="scan"></i><span>AI Medicine Scanner</span></a></li>
-                <li><a href="{{ url_for('scanner.scan') }}" class="nav-link {% if request.endpoint == 'scanner.scan' %}active{% endif %}"><i data-lucide="file-text"></i><span>Prescription Scanner</span></a></li>
-                <li><a href="{{ url_for('prescriptions.index') }}" class="nav-link {% if request.endpoint == 'prescriptions.index' %}active{% endif %}"><i data-lucide="file-check-2"></i><span>My Prescriptions</span></a></li>
-                <li><a href="{{ url_for('medicines.index') }}" class="nav-link {% if request.endpoint and 'medicines' in request.endpoint %}active{% endif %}"><i data-lucide="pill"></i><span>Medicine Cabinet</span></a></li>
-                <li><a href="{{ url_for('schedule.index') }}" class="nav-link {% if request.endpoint and 'schedule' in request.endpoint %}active{% endif %}"><i data-lucide="calendar-clock"></i><span>Smart Reminders</span></a></li>
-                <li><a href="{{ url_for('assistant.index') }}" class="nav-link {% if request.endpoint and 'assistant' in request.endpoint %}active{% endif %}"><i data-lucide="bot"></i><span>AI Health Assistant</span></a></li>
-                <li><a href="{{ url_for('queries.patient_queries') }}" class="nav-link {% if request.endpoint and 'queries' in request.endpoint %}active{% endif %}"><i data-lucide="message-square-plus"></i><span>Ask My Doctor</span></a></li>
-                <li><a href="{{ url_for('records.index') }}" class="nav-link {% if request.endpoint and 'records' in request.endpoint %}active{% endif %}"><i data-lucide="clipboard-list"></i><span>Health Records</span></a></li>
-                <li><a href="{{ url_for('safety.index') }}" class="nav-link {% if request.endpoint and 'safety' in request.endpoint %}active{% endif %}"><i data-lucide="shield-check"></i><span>Safety Centre</span></a></li>
-                <li><a href="{{ url_for('reports.index') }}" class="nav-link {% if request.endpoint and 'reports' in request.endpoint %}active{% endif %}"><i data-lucide="bar-chart-3"></i><span>Adherence Reports</span></a></li>
+                <li class="nav-section-label"><span>{{ t('patient_portal') }}</span></li>
+                <li><a href="{{ url_for('dashboard.index') }}?view=dashboard" class="nav-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}"><i data-lucide="layout-dashboard"></i><span>{{ t('nav_overview') }}</span></a></li>
+                <li><a href="{{ url_for('scanner.medicine_scan') }}?autocamera=1" class="nav-link {% if request.endpoint == 'scanner.medicine_scan' %}active{% endif %}"><i data-lucide="scan"></i><span>{{ t('nav_scan_tablet') }}</span></a></li>
+                <li><a href="{{ url_for('scanner.scan') }}" class="nav-link {% if request.endpoint == 'scanner.scan' %}active{% endif %}"><i data-lucide="file-text"></i><span>{{ t('nav_scan_prescription') }}</span></a></li>
+                <li><a href="{{ url_for('prescriptions.index') }}" class="nav-link {% if request.endpoint == 'prescriptions.index' %}active{% endif %}"><i data-lucide="file-check-2"></i><span>{{ t('nav_prescriptions') }}</span></a></li>
+                <li><a href="{{ url_for('medicines.index') }}" class="nav-link {% if request.endpoint and 'medicines' in request.endpoint %}active{% endif %}"><i data-lucide="pill"></i><span>{{ t('nav_medicines') }}</span></a></li>
+                <li><a href="{{ url_for('schedule.index') }}" class="nav-link {% if request.endpoint and 'schedule' in request.endpoint %}active{% endif %}"><i data-lucide="calendar-clock"></i><span>{{ t('nav_schedule') }}</span></a></li>
 
                 {% elif current_user.role == 'doctor' %}
                 <!-- 2. DOCTOR DASHBOARD NAVIGATION -->
@@ -153,7 +148,7 @@
                 {% endif %}
 
                 <li class="nav-section-label"><span>Account &amp; Legal</span></li>
-                <li><a href="{{ url_for('auth.settings') }}" class="nav-link {% if request.endpoint and 'settings' in request.endpoint %}active{% endif %}"><i data-lucide="settings"></i><span>Settings</span></a></li>
+                <li><a href="{{ url_for('auth.settings') }}" class="nav-link {% if request.endpoint and 'settings' in request.endpoint %}active{% endif %}"><i data-lucide="settings"></i><span>{{ t('nav_settings') }}</span></a></li>
                 <li><a href="{{ url_for('api.privacy_policy') }}" class="nav-link"><i data-lucide="shield-check"></i><span>Privacy Policy</span></a></li>
                 <li><a href="{{ url_for('api.terms_of_service') }}" class="nav-link"><i data-lucide="file-text"></i><span>Terms of Service</span></a></li>
             </ul>
@@ -173,7 +168,7 @@
             </div>
             <a href="{{ url_for('auth.logout') }}" class="nav-link logout-link">
                 <i data-lucide="log-out"></i>
-                <span>Logout</span>
+                <span>{{ t('nav_logout') }}</span>
             </a>
         </div>
     </aside>

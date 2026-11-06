@@ -37,6 +37,12 @@ def index():
 
     user_id = user['id']
 
+    # If patient has auto-camera enabled and hasn't explicitly selected the dashboard view,
+    # open the camera scanner directly.
+    auto_cam_pref = session.get('auto_camera', user['auto_camera'] if 'auto_camera' in user.keys() else 1)
+    if user['role'] == 'patient' and auto_cam_pref == 1 and request.args.get('view') != 'dashboard':
+        return redirect(url_for('scanner.medicine_scan', autocamera=1))
+
     # Gather dashboard stats
     medicine_count = query_db(
         'SELECT COUNT(*) as count FROM medicines WHERE user_id = ?',

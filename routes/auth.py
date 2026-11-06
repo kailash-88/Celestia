@@ -194,8 +194,10 @@ def set_language(lang):
         lang_names = {'en': 'English', 'hi': 'हिन्दी (Hindi)', 'ta': 'தமிழ் (Tamil)'}
         flash(f'Language updated to {lang_names.get(lang, lang)}.', 'info')
 
-    next_url = request.referrer or url_for('dashboard.index')
-    return redirect(next_url)
+    referrer = request.referrer
+    if referrer and '/login' not in referrer and '/register' not in referrer:
+        return redirect(referrer)
+    return redirect(url_for('dashboard.index', view='dashboard'))
 
 
 @auth_bp.route('/set-auto-camera', methods=['POST'])
