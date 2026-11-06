@@ -18,8 +18,7 @@ venv/
 ENV/
 env/
 
-# Database
-*.db
+# Database (medimitra.db is included so cloud deployment has all seeded user data)
 *.sqlite3
 
 # Uploaded Files
