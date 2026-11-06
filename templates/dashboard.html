@@ -174,14 +174,65 @@
             <p>Here is your personalized medicine schedule, daily adherence, and clinical updates.</p>
         </div>
         <div class="welcome-actions">
-            <a href="{{ url_for('scanner.medicine_scan') }}" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px;">
-                <i data-lucide="scan"></i>
-                <span>Scan Medicine Strip</span>
+            <a href="{{ url_for('scanner.medicine_scan') }}?autocamera=1" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px;">
+                <i data-lucide="camera"></i>
+                <span>Open Camera Scanner</span>
             </a>
             <a href="{{ url_for('scanner.scan') }}" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px;">
                 <i data-lucide="file-text"></i>
                 <span>Upload Prescription</span>
             </a>
+        </div>
+    </div>
+
+    <!-- Simple & Real Patient Camera Control Panel -->
+    <div class="card patient-camera-hero" style="background: linear-gradient(135deg, rgba(14, 30, 52, 0.95) 0%, rgba(9, 21, 38, 0.98) 100%); border: 1.5px solid rgba(56, 189, 248, 0.35); border-radius: 16px; padding: 18px 22px; margin-bottom: 24px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(56, 189, 248, 0.15); border: 1.5px solid rgba(56, 189, 248, 0.4); display: grid; place-items: center; color: #38bdf8; flex-shrink: 0;">
+                    <i data-lucide="camera" style="width: 24px; height: 24px;"></i>
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 1.1rem; color: #f1f5f9; display: flex; align-items: center; gap: 8px;">
+                        <span>Auto-Open Camera on App Launch</span>
+                        <span id="autoCamStatusBadge" class="pill-status" style="background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.4); font-size: 0.72rem;">ACTIVE</span>
+                    </h3>
+                    <p style="margin: 4px 0 0 0; font-size: 0.86rem; color: #94a3b8;">
+                        Automatically open the mobile camera directly to scan tablets when you open MediMitra.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Auto Camera Toggle Switch -->
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <label class="switch-toggle-label" style="display: inline-flex; align-items: center; gap: 10px; cursor: pointer; user-select: none;">
+                    <span style="font-size: 0.88rem; font-weight: 700; color: #cbd5e1;" id="autoCamToggleText">Auto-Camera ON</span>
+                    <input type="checkbox" id="autoCamToggle" {% if session.get('auto_camera', 1) == 1 %}checked{% endif %} onchange="toggleAutoCamera(this.checked)" style="width: 20px; height: 20px; accent-color: #0284c7; cursor: pointer;">
+                </label>
+                <a href="{{ url_for('scanner.medicine_scan') }}?autocamera=1" class="btn btn-primary btn-sm" style="background: #0284c7; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px;">
+                    <i data-lucide="camera"></i>
+                    <span>Launch Camera</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Language Quick Switcher Bar -->
+        <div style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed rgba(56, 189, 248, 0.2); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #94a3b8;">
+                <i data-lucide="languages" style="width: 16px; height: 16px; color: #38bdf8;"></i>
+                <span style="font-weight: 600;">Voice &amp; App Language:</span>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <a href="{{ url_for('auth.set_language', lang='en') }}" class="btn btn-sm" style="padding: 4px 12px; font-size: 0.82rem; font-weight: 700; border-radius: 6px; text-decoration: none; border: 1px solid {% if session.get('language', 'en') == 'en' %}#38bdf8{% else %}rgba(148,163,184,0.3){% endif %}; background: {% if session.get('language', 'en') == 'en' %}rgba(56,189,248,0.25){% else %}rgba(15,23,42,0.6){% endif %}; color: {% if session.get('language', 'en') == 'en' %}#38bdf8{% else %}#cbd5e1{% endif %};">
+                    🇬🇧 English
+                </a>
+                <a href="{{ url_for('auth.set_language', lang='hi') }}" class="btn btn-sm" style="padding: 4px 12px; font-size: 0.82rem; font-weight: 700; border-radius: 6px; text-decoration: none; border: 1px solid {% if session.get('language') == 'hi' %}#38bdf8{% else %}rgba(148,163,184,0.3){% endif %}; background: {% if session.get('language') == 'hi' %}rgba(56,189,248,0.25){% else %}rgba(15,23,42,0.6){% endif %}; color: {% if session.get('language') == 'hi' %}#38bdf8{% else %}#cbd5e1{% endif %};">
+                    🇮🇳 हिन्दी (Hindi)
+                </a>
+                <a href="{{ url_for('auth.set_language', lang='ta') }}" class="btn btn-sm" style="padding: 4px 12px; font-size: 0.82rem; font-weight: 700; border-radius: 6px; text-decoration: none; border: 1px solid {% if session.get('language') == 'ta' %}#38bdf8{% else %}rgba(148,163,184,0.3){% endif %}; background: {% if session.get('language') == 'ta' %}rgba(56,189,248,0.25){% else %}rgba(15,23,42,0.6){% endif %}; color: {% if session.get('language') == 'ta' %}#38bdf8{% else %}#cbd5e1{% endif %};">
+                    🇮🇳 தமிழ் (Tamil)
+                </a>
+            </div>
         </div>
     </div>
 
@@ -459,4 +510,62 @@
     </div>
 
 </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleAutoCamera(enabled) {
+    const statusBadge = document.getElementById('autoCamStatusBadge');
+    const toggleText = document.getElementById('autoCamToggleText');
+    if (enabled) {
+        if (statusBadge) {
+            statusBadge.textContent = "ACTIVE";
+            statusBadge.style.background = "rgba(34, 197, 94, 0.2)";
+            statusBadge.style.color = "#4ade80";
+            statusBadge.style.borderColor = "rgba(34, 197, 94, 0.4)";
+        }
+        if (toggleText) toggleText.textContent = "Auto-Camera ON";
+        localStorage.setItem('medimitra_auto_camera', '1');
+    } else {
+        if (statusBadge) {
+            statusBadge.textContent = "DISABLED";
+            statusBadge.style.background = "rgba(148, 163, 184, 0.2)";
+            statusBadge.style.color = "#94a3b8";
+            statusBadge.style.borderColor = "rgba(148, 163, 184, 0.4)";
+        }
+        if (toggleText) toggleText.textContent = "Auto-Camera OFF";
+        localStorage.setItem('medimitra_auto_camera', '0');
+    }
+
+    // Persist to server
+    fetch('/set-auto-camera', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: enabled })
+    }).catch(err => console.log('Auto-camera preference saved locally'));
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Sync toggle UI with stored state
+    const toggle = document.getElementById('autoCamToggle');
+    const localVal = localStorage.getItem('medimitra_auto_camera');
+    const serverVal = {{ '1' if session.get('auto_camera', 1) == 1 else '0' }};
+    const isAutoOn = localVal !== null ? (localVal === '1') : (serverVal === 1);
+
+    if (toggle) {
+        toggle.checked = isAutoOn;
+        toggleAutoCamera(isAutoOn);
+    }
+
+    // 2. Auto-open camera once on fresh app launch / entry if enabled
+    const hasLaunched = sessionStorage.getItem('medimitra_auto_camera_opened');
+    const urlParams = new URLSearchParams(window.location.search);
+    const disableAutoLaunch = urlParams.has('no_auto');
+
+    if (isAutoOn && !hasLaunched && !disableAutoLaunch) {
+        sessionStorage.setItem('medimitra_auto_camera_opened', '1');
+        window.location.href = "{{ url_for('scanner.medicine_scan') }}?autocamera=1";
+    }
+});
+</script>
 {% endblock %}

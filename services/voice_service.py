@@ -138,9 +138,81 @@ def _detect_purpose_key(uses_str, name_str, generic_str):
     return "general"
 
 
+def _detect_avoid_instructions(warnings_raw, interactions_raw, generic_raw, name_raw):
+    """
+    Determine what medicines, foods, or actions should NOT be taken or avoided.
+    Returns localized guidance strings in English, Hindi, and Tamil (plus other Indic languages).
+    """
+    corpus = f"{warnings_raw or ''} {interactions_raw or ''} {generic_raw or ''} {name_raw or ''}".lower()
+    
+    avoid_en = []
+    avoid_hi = []
+    avoid_ta = []
+
+    # 1. Alcohol
+    if "alcohol" in corpus:
+        avoid_en.append("Do not consume alcohol with this medicine.")
+        avoid_hi.append("इसके साथ शराब का सेवन बिल्कुल न करें।")
+        avoid_ta.append("இந்த மாத்திரையுடன் மது அருந்தக்கூடாது.")
+
+    # 2. Duplicate paracetamol / Overdose
+    if any(k in corpus for k in ["paracetamol", "dolo", "calpol", "crocin", "overdose"]):
+        avoid_en.append("Do not take other paracetamol or cold medicines at the same time.")
+        avoid_hi.append("इसके साथ कोई अन्य पैरासिटामोल या सर्दी की दवा न लें।")
+        avoid_ta.append("இதனுடன் வேறு பாராசிட்டமால் அல்லது சளி மருந்துகளை சேர்த்து உட்கொள்ள வேண்டாம்.")
+
+    # 3. Empty stomach / NSAID irritation
+    if any(k in corpus for k in ["empty stomach", "ulcer", "ibuprofen", "combiflam", "flexon", "voveran", "diclofenac", "aceclofenac"]):
+        avoid_en.append("Do not take on an empty stomach; avoid combining with other pain killers or aspirin.")
+        avoid_hi.append("इसे खाली पेट न लें, और अन्य दर्द की दवा या एस्पिरिन के साथ लेने से बचें।")
+        avoid_ta.append("இதை வெறும் வயிற்றில் உட்கொள்ளாதீர்கள், மேலும் பிற வலி நிவாரணிகள் அல்லது ஆஸ்பிரினுடன் சேர்ப்பதை தவிர்க்கவும்.")
+
+    # 4. Antibiotics / Calcium / Milk / Antacids
+    if any(k in corpus for k in ["antacid", "milk", "calcium", "tetracycline", "ciprofloxacin", "azithromycin", "doxycycline"]):
+        avoid_en.append("Avoid taking with milk or antacids at the same time; keep at least a 2-hour gap.")
+        avoid_hi.append("इसे दूध या एंटासिड के साथ न लें, कम से कम 2 घंटे का अंतर रखें।")
+        avoid_ta.append("இதை பால் அல்லது அசிடிட்டி மருந்துகளுடன் ஒன்றாக எடுக்க வேண்டாம், 2 மணி நேரம் இடைவெளி விடவும்.")
+
+    # 5. Blood thinners / Warfarin / Aspirin
+    if any(k in corpus for k in ["warfarin", "blood thinner", "bleeding", "ecosprin", "clopidogrel"]):
+        avoid_en.append("Avoid taking unprescribed pain relievers due to bleeding risks.")
+        avoid_hi.append("रक्तस्राव के खतरे के कारण डॉक्टर की सलाह के बिना कोई दर्द निवारक न लें।")
+        avoid_ta.append("இரத்தப்போக்கு ஆபத்து உள்ளதால் மருத்துவர் அனுமதியின்றி பிற வலி நிவாரணிகளை தவிர்க்கவும்.")
+
+    # 6. Drowsiness / Driving
+    if any(k in corpus for k in ["drowsy", "dizziness", "cetirizine", "montelukast", "sedat"]):
+        avoid_en.append("Avoid driving or heavy machinery if you feel drowsy.")
+        avoid_hi.append("नींद या चक्कर आने पर गाड़ी चलाने से बचें।")
+        avoid_ta.append("தூக்கம் அல்லது மயக்கம் இருந்தால் வாகனம் ஓட்டுவதை தவிர்க்கவும்.")
+
+    # Fallback if none specifically matched
+    if not avoid_en:
+        avoid_en.append("Avoid taking double doses or combining with unprescribed medications.")
+        avoid_hi.append("दोगुनी खुराक न लें और बिना डॉक्टर की सलाह के कोई अन्य दवा साथ में न लें।")
+        avoid_ta.append("இரட்டை அளவு எடுப்பதையோ அல்லது மருத்துவர் பரிந்துரைக்காத பிற மருந்துகளை சேர்ப்பதையோ தவிர்க்கவும்.")
+
+    return {
+        "en": " What to avoid: " + " ".join(avoid_en),
+        "hi": " क्या न लें और परहेज करें: " + " ".join(avoid_hi),
+        "ta": " என்ன தவிர்க்க வேண்டும்: " + " ".join(avoid_ta),
+        "te": " నివారించవలసినవి: డబుల్ డోస్ తీసుకోకండి మరియు డాక్టర్ సలహా లేకుండా ఇతర మందులతో కలపకండి.",
+        "bn": " যা এড়িয়ে চলবেন: অতিরিক্ত ডোজ নেবেন না এবং ডাক্তারের পরামর্শ ছাড়া অন্য ওষুধের সাথে খাবেন না।",
+        "mr": " काय टाळावे: दुहेरी डोस घेऊ नका आणि डॉक्टरांच्या सल्ल्याशिवाय इतर औषधे एकत्र घेऊ नका.",
+        "gu": " શું ટાળવું: બમણો ડોઝ ન લેશો અને ડૉક્ટરની સલાહ વિના અન્ય દવાઓ સાથે ન લેશો.",
+        "kn": " ತಪ್ಪಿಸಬೇಕಾದದ್ದು: ಡಬಲ್ ಡೋಸ್ ತೆಗೆದುಕೊಳ್ಳಬೇಡಿ ಮತ್ತು ವೈದ್ಯರ ಸಲಹೆಯಿಲ್ಲದೆ ಇತರ ಔಷಧಿಗಳೊಂದಿಗೆ ತೆಗೆದುಕೊಳ್ಳಬೇಡಿ.",
+        "ml": " ഒഴിവാക്കേണ്ടവ: ഇരട്ടി അളവിൽ കഴിക്കരുത്, ഡോക്ടറുടെ നിർദ്ദേശമില്ലാതെ മറ്റ് മരുന്നുകൾക്കൊപ്പം കഴിക്കരുത്.",
+        "items": {
+            "en": avoid_en,
+            "hi": avoid_hi,
+            "ta": avoid_ta
+        }
+    }
+
+
 def generate_medicine_voice_scripts(facts):
     """
     Produce rich spoken text in 9 Indian languages for any scanned tablet/medicine.
+    Includes medicine identification, clinical purpose, food timing, and what to avoid.
     """
     name = (facts.get("name") or "Medicine").strip()
     generic = (facts.get("generic_name") or facts.get("active_ingredient") or "").strip()
@@ -148,6 +220,7 @@ def generate_medicine_voice_scripts(facts):
     timing_raw = facts.get("before_after_food") or "Take as advised by your doctor."
     uses_raw = facts.get("common_uses") or facts.get("purpose") or "General therapeutic treatment."
     warnings_raw = facts.get("warnings") or ""
+    interactions_raw = facts.get("known_interactions") or facts.get("side_effects") or ""
 
     form = facts.get("form") or "Tablet"
     if "cap" in form.lower():
@@ -159,6 +232,7 @@ def generate_medicine_voice_scripts(facts):
 
     food_key = _detect_food_timing_key(timing_raw)
     purpose_key = _detect_purpose_key(uses_raw, name, generic)
+    avoid_info = _detect_avoid_instructions(warnings_raw, interactions_raw, generic, name)
 
     # 1. Food timing translations
     timing_dict = {
@@ -384,7 +458,7 @@ def generate_medicine_voice_scripts(facts):
         "locale": "en-IN",
         "name": "English",
         "flag": "🇬🇧",
-        "text": f"This is {clean_name}{dose_clause_en} {form_clean}{gen_clause_en}. It is prescribed for {purpose_dict[purpose_key]['en']}. {timing_dict[food_key]['en']}"
+        "text": f"This is {clean_name}{dose_clause_en} {form_clean}{gen_clause_en}. It is prescribed for {purpose_dict[purpose_key]['en']}. {timing_dict[food_key]['en']}{avoid_info['en']}"
     }
 
     # 2. Hindi (hi-IN)
@@ -395,7 +469,7 @@ def generate_medicine_voice_scripts(facts):
         "locale": "hi-IN",
         "name": "हिन्दी (Hindi)",
         "flag": "🇮🇳",
-        "text": f"यह {clean_name}{dose_clause_hi} टैबलेट है{gen_clause_hi} इसका उपयोग {purpose_dict[purpose_key]['hi']} के लिए किया जाता है। {timing_dict[food_key]['hi']}"
+        "text": f"यह {clean_name}{dose_clause_hi} टैबलेट है{gen_clause_hi} इसका उपयोग {purpose_dict[purpose_key]['hi']} के लिए किया जाता है। {timing_dict[food_key]['hi']}{avoid_info['hi']}"
     }
 
     # 3. Tamil (ta-IN)
@@ -406,7 +480,7 @@ def generate_medicine_voice_scripts(facts):
         "locale": "ta-IN",
         "name": "தமிழ் (Tamil)",
         "flag": "🇮🇳",
-        "text": f"இது {clean_name}{dose_clause_ta} மாத்திரை{gen_clause_ta} இது {purpose_dict[purpose_key]['ta']} பயன்படுகிறது. {timing_dict[food_key]['ta']}"
+        "text": f"இது {clean_name}{dose_clause_ta} மாத்திரை{gen_clause_ta} இது {purpose_dict[purpose_key]['ta']} பயன்படுகிறது. {timing_dict[food_key]['ta']}{avoid_info['ta']}"
     }
 
     # 4. Telugu (te-IN)
@@ -417,7 +491,7 @@ def generate_medicine_voice_scripts(facts):
         "locale": "te-IN",
         "name": "తెలుగు (Telugu)",
         "flag": "🇮🇳",
-        "text": f"ఇది {clean_name}{dose_clause_te} టాబ్లెట్{gen_clause_te} ఇది {purpose_dict[purpose_key]['te']} ఉపయోగపడుతుంది. {timing_dict[food_key]['te']}"
+        "text": f"ఇది {clean_name}{dose_clause_te} టాబ్లెట్{gen_clause_te} ఇది {purpose_dict[purpose_key]['te']} ఉపయోగపడుతుంది. {timing_dict[food_key]['te']}{avoid_info['te']}"
     }
 
     # 5. Bengali (bn-IN)
@@ -428,7 +502,7 @@ def generate_medicine_voice_scripts(facts):
         "locale": "bn-IN",
         "name": "বাংলা (Bengali)",
         "flag": "🇮🇳",
-        "text": f"এটি {clean_name}{dose_clause_bn} ট্যাবলেট{gen_clause_bn} এটি {purpose_dict[purpose_key]['bn']} ব্যবহৃত হয়। {timing_dict[food_key]['bn']}"
+        "text": f"এটি {clean_name}{dose_clause_bn} ট্যাবলেট{gen_clause_bn} এটি {purpose_dict[purpose_key]['bn']} ব্যবহৃত হয়। {timing_dict[food_key]['bn']}{avoid_info['bn']}"
     }
 
     # 6. Marathi (mr-IN)
@@ -439,7 +513,7 @@ def generate_medicine_voice_scripts(facts):
         "locale": "mr-IN",
         "name": "मराठी (Marathi)",
         "flag": "🇮🇳",
-        "text": f"हे {clean_name}{dose_clause_mr} टॅब्लेट आहे{gen_clause_mr} हे {purpose_dict[purpose_key]['mr']} वापरले जाते. {timing_dict[food_key]['mr']}"
+        "text": f"हे {clean_name}{dose_clause_mr} टॅब्लेट आहे{gen_clause_mr} हे {purpose_dict[purpose_key]['mr']} वापरले जाते. {timing_dict[food_key]['mr']}{avoid_info['mr']}"
     }
 
     # 7. Gujarati (gu-IN)
@@ -450,7 +524,7 @@ def generate_medicine_voice_scripts(facts):
         "locale": "gu-IN",
         "name": "ગુજરાતી (Gujarati)",
         "flag": "🇮🇳",
-        "text": f"આ {clean_name}{dose_clause_gu} ટેબ્લેટ છે{gen_clause_gu} આ {purpose_dict[purpose_key]['gu']} માટે વપરાય છે. {timing_dict[food_key]['gu']}"
+        "text": f"આ {clean_name}{dose_clause_gu} ટેબ્લેટ છે{gen_clause_gu} આ {purpose_dict[purpose_key]['gu']} માટે વપરાય છે. {timing_dict[food_key]['gu']}{avoid_info['gu']}"
     }
 
     # 8. Kannada (kn-IN)
@@ -461,7 +535,7 @@ def generate_medicine_voice_scripts(facts):
         "locale": "kn-IN",
         "name": "ಕನ್ನಡ (Kannada)",
         "flag": "🇮🇳",
-        "text": f"ಇದು {clean_name}{dose_clause_kn} ಮಾತ್ರೆ{gen_clause_kn} ಇದನ್ನು {purpose_dict[purpose_key]['kn']} ಬಳಸಲಾಗುತ್ತದೆ. {timing_dict[food_key]['kn']}"
+        "text": f"ಇದು {clean_name}{dose_clause_kn} ಮಾತ್ರೆ{gen_clause_kn} ಇದನ್ನು {purpose_dict[purpose_key]['kn']} ಬಳಸಲಾಗುತ್ತದೆ. {timing_dict[food_key]['kn']}{avoid_info['kn']}"
     }
 
     # 9. Malayalam (ml-IN)
@@ -472,7 +546,8 @@ def generate_medicine_voice_scripts(facts):
         "locale": "ml-IN",
         "name": "മലയാളം (Malayalam)",
         "flag": "🇮🇳",
-        "text": f"ഇത് {clean_name}{dose_clause_ml} ഗുളികയാണ്{gen_clause_ml} ഇത് {purpose_dict[purpose_key]['ml']} ഉപയോഗിക്കുന്നു. {timing_dict[food_key]['ml']}"
+        "text": f"ഇത് {clean_name}{dose_clause_ml} ഗുളികയാണ്{gen_clause_ml} ഇത് {purpose_dict[purpose_key]['ml']} ഉപയോഗിക്കുന്നു. {timing_dict[food_key]['ml']}{avoid_info['ml']}"
     }
 
+    scripts["avoid_items"] = avoid_info["items"]
     return scripts

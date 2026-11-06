@@ -1639,18 +1639,29 @@ INDIAN_MEDICINES = [
 ]
 
 
-def seed_indian_medicines():
-    """Populate sqlite database with 130+ Indian medicines."""
-    db_path = Path(__file__).resolve().parents[1] / "medimitra.db"
+try:
+    from database.more_indian_medicines import SUPPLEMENTAL_INDIAN_MEDICINES
+except ImportError:
+    try:
+        from more_indian_medicines import SUPPLEMENTAL_INDIAN_MEDICINES
+    except ImportError:
+        SUPPLEMENTAL_INDIAN_MEDICINES = []
+
+
+def seed_indian_medicines(db_path=None):
+    """Populate sqlite database with 215+ Indian medicines."""
+    if db_path is None:
+        db_path = Path(__file__).resolve().parents[1] / "medimitra.db"
     conn = sqlite3.connect(str(db_path))
     cur = conn.cursor()
 
-    print(f"[Seed] Seeding {len(INDIAN_MEDICINES)} Indian medicines into {db_path}...")
+    all_medicines = INDIAN_MEDICINES + SUPPLEMENTAL_INDIAN_MEDICINES
+    print(f"[Seed] Seeding {len(all_medicines)} Indian medicines into {db_path}...")
 
     # Insert or update each medicine by name
     inserted = 0
     updated = 0
-    for med in INDIAN_MEDICINES:
+    for med in all_medicines:
         cur.execute("SELECT id FROM medicine_database WHERE LOWER(name) = ?", (med["name"].lower(),))
         existing = cur.fetchone()
         if existing:

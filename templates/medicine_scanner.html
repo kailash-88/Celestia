@@ -51,7 +51,7 @@
 .fact-val {
     font-size: 1.05rem;
     font-weight: 700;
-    color: #0f172a;
+    color: #f1f5f9;
     margin-top: 4px;
 }
 .food-badge {
@@ -62,17 +62,19 @@
     border-radius: 9999px;
     font-weight: 700;
     font-size: 0.9rem;
-    background: #fef3c7;
-    color: #92400e;
+    background: rgba(245, 158, 11, 0.16);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    color: #fbbf24;
     margin-top: 8px;
 }
 .critical-alert {
-    background: #fee2e2;
-    border-left: 4px solid #ef4444;
+    background: rgba(239, 68, 68, 0.16);
+    border: 1px solid rgba(239, 68, 68, 0.45);
+    border-left: 5px solid #ef4444;
     padding: 14px 18px;
     border-radius: 8px;
     margin-bottom: 20px;
-    color: #991b1b;
+    color: #fca5a5;
 }
 .file-btn-wrapper {
     position: relative;
@@ -100,8 +102,8 @@
     background: #16a34a !important;
 }
 .voice-speaking #transcriptWrap {
-    border-color: #16a34a !important;
-    background: #f0fdf4 !important;
+    border-color: #22c55e !important;
+    background: rgba(6, 78, 59, 0.3) !important;
 }
 </style>
 {% endblock %}
@@ -111,9 +113,20 @@
 {% block content %}
 <div class="scanner-container">
 
-    <div style="margin-bottom: 24px;">
-        <h2>AI Medicine Strip &amp; Blister Pack Scanner 📷</h2>
-        <p style="color: #64748b;">Scan or photograph any medicine strip or box. MediMitra's AI extracts the medicine name, dosage strength, food instructions, and verified side effects.</p>
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px; margin-bottom: 20px;">
+        <div>
+            <h2 style="margin: 0 0 6px 0;">AI Medicine Strip &amp; Blister Pack Scanner 📷</h2>
+            <p style="color: #94a3b8; margin: 0; font-size: 0.92rem;">Scan or photograph any medicine strip or box. MediMitra identifies the tablet, explains food timing, and tells you what to avoid.</p>
+        </div>
+
+        <!-- Quick Auto-Camera Switch Pill -->
+        <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 9999px; padding: 6px 14px;">
+            <i data-lucide="camera" style="width: 16px; height: 16px; color: #38bdf8;"></i>
+            <span style="font-size: 0.82rem; font-weight: 700; color: #cbd5e1;">Auto-Open:</span>
+            <label style="display: inline-flex; align-items: center; cursor: pointer; margin: 0;">
+                <input type="checkbox" id="scannerAutoCamToggle" onchange="toggleAutoCameraScanner(this.checked)" style="width: 16px; height: 16px; accent-color: #0284c7; cursor: pointer;">
+            </label>
+        </div>
     </div>
 
     <!-- Upload Card -->
@@ -121,14 +134,14 @@
         <form method="POST" enctype="multipart/form-data" id="scanForm">
             <i data-lucide="scan" style="width: 56px; height: 56px; color: #0284c7; margin-bottom: 12px;"></i>
             <h3 style="margin: 0 0 8px 0;">Take Photo or Upload Medicine Strip</h3>
-            <p style="color: #64748b; font-size: 0.9rem; max-width: 480px; margin: 0 auto 20px auto;">
+            <p style="color: #94a3b8; font-size: 0.9rem; max-width: 480px; margin: 0 auto 20px auto;">
                 Capture the front or back of the blister strip showing the brand name, strength (mg), and expiry date.
             </p>
 
             <div style="display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;">
                 <!-- 1. Dedicated Camera Capture Button -->
                 <div class="file-btn-wrapper">
-                    <button type="button" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px; pointer-events: none;">
+                    <button type="button" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px; pointer-events: none; background: #0284c7; font-weight: 700;">
                         <i data-lucide="camera"></i>
                         <span>Take Photo (Camera)</span>
                     </button>
@@ -146,8 +159,8 @@
             </div>
 
             <!-- Preview & Action Trigger -->
-            <div id="selectionStatus" style="display: none; margin-top: 18px; padding: 12px; background: #f0fdf4; border-radius: 8px; border: 1px solid #bbf7d0; max-width: 450px; margin-left: auto; margin-right: auto;">
-                <div style="display:flex; align-items:center; justify-content:center; gap:8px; color: #166534; font-weight: 600; margin-bottom: 8px;">
+            <div id="selectionStatus" style="display: none; margin-top: 18px; padding: 12px; background: rgba(16, 185, 129, 0.15); border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.4); max-width: 450px; margin-left: auto; margin-right: auto;">
+                <div style="display:flex; align-items:center; justify-content:center; gap:8px; color: #34d399; font-weight: 600; margin-bottom: 8px;">
                     <i data-lucide="check-circle" style="width:18px;height:18px;"></i>
                     <span id="fileName">Photo ready for analysis</span>
                 </div>
@@ -249,7 +262,7 @@
                         <i data-lucide="copy" style="width: 15px; height: 15px;"></i>
                     </button>
                 </div>
-                <p id="transcriptText" style="margin: 0; color: #0f172a; font-size: 1.05rem; line-height: 1.55; font-weight: 500;">
+                <p id="transcriptText" style="margin: 0; color: #f1f5f9; font-size: 1.05rem; line-height: 1.6; font-weight: 500;">
                     Loading spoken explanation...
                 </p>
             </div>
@@ -257,11 +270,11 @@
 
         <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
             <div>
-                <span style="font-size: 0.8rem; font-weight: 700; color: #0284c7; text-transform: uppercase;">AI Identified Medicine</span>
-                <h2 style="margin: 4px 0 2px 0;">{{ result.name }}</h2>
-                <div style="color: #64748b; font-size: 0.95rem;">Active: <strong>{{ result.generic_name or 'Identified active ingredient' }}</strong></div>
+                <span style="font-size: 0.8rem; font-weight: 750; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px;">AI Identified Indian Medicine</span>
+                <h2 style="margin: 4px 0 2px 0; color: #f8fafc;">{{ result.name }}</h2>
+                <div style="color: #94a3b8; font-size: 0.95rem;">Active Molecule: <strong style="color: #e2e8f0;">{{ result.generic_name or 'Standard active formulation' }}</strong></div>
                 {% if result.analysis_notice %}
-                <div style="font-size: 0.8rem; color: #0284c7; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+                <div style="font-size: 0.8rem; color: #38bdf8; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
                     <i data-lucide="sparkles" style="width: 14px; height: 14px;"></i>
                     <span>{{ result.analysis_notice }}</span>
                 </div>
@@ -289,33 +302,46 @@
             </div>
             <div class="fact-item">
                 <div class="fact-label">Expiry Date</div>
-                <div class="fact-val" style="color: {% if result.expiry_date and '2023' in result.expiry_date %}#dc2626{% else %}#16a34a{% endif %};">
+                <div class="fact-val" style="color: {% if result.expiry_date and '2023' in result.expiry_date %}#ef4444{% else %}#34d399{% endif %};">
                     {{ result.expiry_date or 'Verified valid' }}
                 </div>
             </div>
         </div>
 
-        <!-- Verified Clinical Usage & Side Effects -->
-        <div style="background: #f8fafc; border-radius: 8px; padding: 16px; margin: 16px 0;">
-            <div style="margin-bottom: 12px;">
-                <strong style="color: #0f172a; display: flex; align-items: center; gap: 6px;">
-                    <i data-lucide="info" style="color: #0284c7; width: 16px; height: 16px;"></i> Clinical Usage &amp; Instructions:
+        <!-- 1. Dedicated What NOT to Take / To Be Avoided Card -->
+        <div style="background: linear-gradient(135deg, rgba(38, 12, 12, 0.95) 0%, rgba(20, 8, 8, 0.98) 100%); border: 1.5px solid rgba(239, 68, 68, 0.45); border-left: 6px solid #ef4444; border-radius: 14px; padding: 18px 20px; margin: 18px 0; box-shadow: 0 8px 28px rgba(239, 68, 68, 0.15);">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <i data-lucide="shield-alert" style="color: #ef4444; width: 24px; height: 24px; flex-shrink: 0;"></i>
+                <h4 style="margin: 0; color: #fca5a5; font-size: 1.08rem; font-weight: 750;">
+                    ⛔ What NOT to Take or to be AVOIDED (परहेज / தவிர்க்க வேண்டியவை)
+                </h4>
+            </div>
+            <p style="margin: 0; font-size: 0.95rem; color: #fee2e2; line-height: 1.55; font-weight: 500;">
+                {{ result.warnings or 'Do not consume with alcohol. Do not exceed prescribed dosage. Avoid taking with unprescribed pain killers.' }}
+            </p>
+        </div>
+
+        <!-- 2. Verified Clinical Purpose & Food Timing -->
+        <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56, 189, 248, 0.22); border-radius: 14px; padding: 20px; margin: 18px 0;">
+            <div style="margin-bottom: 16px;">
+                <strong style="color: #38bdf8; display: flex; align-items: center; gap: 8px; font-size: 0.98rem;">
+                    <i data-lucide="check-circle" style="color: #38bdf8; width: 18px; height: 18px;"></i> What This Medicine Is Prescribed For:
                 </strong>
-                <p style="margin: 4px 0 0 0; color: #334155; font-size: 0.9rem;">{{ result.common_uses }}</p>
+                <p style="margin: 6px 0 0 0; color: #e2e8f0; font-size: 0.94rem; line-height: 1.55;">{{ result.common_uses }}</p>
             </div>
 
-            <div style="margin-bottom: 12px;">
-                <strong style="color: #0f172a; display: flex; align-items: center; gap: 6px;">
-                    <i data-lucide="shield-alert" style="color: #d97706; width: 16px; height: 16px;"></i> Possible Side Effects:
+            <div style="margin-bottom: 16px;">
+                <strong style="color: #fbbf24; display: flex; align-items: center; gap: 8px; font-size: 0.98rem;">
+                    <i data-lucide="utensils" style="color: #fbbf24; width: 18px; height: 18px;"></i> Food &amp; Timing Guidance:
                 </strong>
-                <p style="margin: 4px 0 0 0; color: #334155; font-size: 0.9rem;">{{ result.side_effects }}</p>
+                <p style="margin: 6px 0 0 0; color: #e2e8f0; font-size: 0.94rem; line-height: 1.55;">{{ result.before_after_food }}</p>
             </div>
 
             <div>
-                <strong style="color: #0f172a; display: flex; align-items: center; gap: 6px;">
-                    <i data-lucide="alert-triangle" style="color: #dc2626; width: 16px; height: 16px;"></i> Safety Precautions:
+                <strong style="color: #94a3b8; display: flex; align-items: center; gap: 8px; font-size: 0.95rem;">
+                    <i data-lucide="alert-circle" style="color: #94a3b8; width: 18px; height: 18px;"></i> Possible Side Effects:
                 </strong>
-                <p style="margin: 4px 0 0 0; color: #334155; font-size: 0.9rem;">{{ result.warnings }}</p>
+                <p style="margin: 6px 0 0 0; color: #cbd5e1; font-size: 0.9rem; line-height: 1.5;">{{ result.side_effects }}</p>
             </div>
         </div>
 
@@ -376,6 +402,39 @@ function handleGallerySelected(input) {
     }
 }
 
+// Global auto-camera handling and toggle
+function toggleAutoCameraScanner(enabled) {
+    localStorage.setItem('medimitra_auto_camera', enabled ? '1' : '0');
+    fetch('/set-auto-camera', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: enabled })
+    }).catch(err => console.log('Preference saved locally'));
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Sync Auto-Camera toggle switch
+    const autoCamToggle = document.getElementById('scannerAutoCamToggle');
+    const localPref = localStorage.getItem('medimitra_auto_camera');
+    const serverPref = {{ '1' if session.get('auto_camera', 1) == 1 else '0' }};
+    const isAutoOn = localPref !== null ? (localPref === '1') : (serverPref === 1);
+    if (autoCamToggle) {
+        autoCamToggle.checked = isAutoOn;
+    }
+
+    // Auto-launch camera if requested via URL parameter or if fresh scan with auto-camera ON
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasResult = {{ 'true' if result else 'false' }};
+    if (!hasResult && (urlParams.get('autocamera') === '1' || (isAutoOn && !urlParams.has('manual')))) {
+        setTimeout(() => {
+            const camInput = document.getElementById('cameraInput');
+            if (camInput) {
+                camInput.click();
+            }
+        }, 350);
+    }
+});
+
 // ==============================================================
 // Multilingual AI Voice Companion
 // ==============================================================
@@ -387,8 +446,9 @@ let currentUtterance = null;
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Restore preferred language
-    const savedLang = localStorage.getItem('medimitra_voice_lang') || 'hi';
+    // 1. Restore preferred language: prioritize session language (en, hi, ta)
+    const sessionLang = "{{ session.get('language', 'en') }}";
+    const savedLang = localStorage.getItem('medimitra_voice_lang') || sessionLang || 'en';
     const select = document.getElementById('voiceLangSelect');
     if (select && voiceScripts[savedLang]) {
         select.value = savedLang;
@@ -414,7 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function getSelectedLang() {
     const select = document.getElementById('voiceLangSelect');
-    return select ? select.value : 'hi';
+    return select ? select.value : ('{{ session.get('language', 'en') }}' || 'en');
 }
 
 function updateTranscriptDisplay() {

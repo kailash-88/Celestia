@@ -48,11 +48,29 @@ def init_db():
         ):
             if name not in existing:
                 conn.execute(f"ALTER TABLE prescriptions ADD COLUMN {name} {definition}")
+
         medicine_columns = {row[1] for row in conn.execute("PRAGMA table_info(medicines)").fetchall()}
         for name, definition in (("prescription_id", "INTEGER"), ("batch_number", "TEXT"), ("manufacturing_date", "DATE")):
             if name not in medicine_columns:
                 conn.execute(f"ALTER TABLE medicines ADD COLUMN {name} {definition}")
+
+        user_columns = {row[1] for row in conn.execute("PRAGMA table_info(users)").fetchall()}
+        for name, definition in (("language", "TEXT DEFAULT 'en'"), ("auto_camera", "INTEGER DEFAULT 1")):
+            if name not in user_columns:
+                conn.execute(f"ALTER TABLE users ADD COLUMN {name} {definition}")
+
         conn.commit()
+
+        # Seed comprehensive Indian medicine database if needed
+        cur = conn.execute("SELECT COUNT(*) FROM medicine_database")
+        med_count = cur.fetchone()[0]
+        if med_count < 170:
+            try:
+                from database.seed_indian_medicines import seed_indian_medicines
+                seed_indian_medicines(get_db_path())
+            except Exception as se:
+                print(f"[DB] Supplemental medicine seeding skipped/deferred: {se}")
+
         print("[DB] Database initialized successfully.")
     except Exception as e:
         print(f"[DB] Error initializing database: {e}")
